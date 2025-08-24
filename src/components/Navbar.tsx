@@ -39,38 +39,33 @@ export default function Navbar() {
 
   return (
     <motion.header
-      className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50"
+      className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b-2 border-border/50"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+      <div className="container max-w-7xl mx-auto px-6 sm:px-8 lg:px-8">
+        <div className="flex h-16 lg:h-20 items-center justify-between">
           {/* Logo */}
           <motion.div
-            className="flex items-center space-x-3"
+            className="flex items-center space-x-2 lg:space-x-3"
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 lg:space-x-3 group"
+            >
               <motion.div
-                className="flex h-10 w-10 items-center justify-center overflow-hidden"
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="flex h-10 w-10 lg:h-12 lg:w-12 items-center justify-center overflow-hidden rounded-full"
+                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <motion.img
+                <img
                   src="/logo.png"
                   alt="NEXUSUI"
-                  className="w-10 h-10"
-                  animate={{
-                    rotate: [0, 360],
-                  }}
-                  transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
+                  className="w-10 h-10 lg:w-12 lg:h-12 aspect-square object-cover"
                 />
               </motion.div>
               <motion.div
@@ -78,10 +73,11 @@ export default function Navbar() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h1 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                  NEXUSUI
+                <h1 className="text-base lg:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  <span className="block sm:hidden">nexuSUI</span>
+                  <span className="hidden sm:block">NEXUSUI</span>
                 </h1>
-                <p className="text-xs text-muted-foreground">
+                <p className="hidden sm:block text-xs text-muted-foreground">
                   Next-gen blockchain platform
                 </p>
               </motion.div>
@@ -165,18 +161,18 @@ export default function Navbar() {
           </div>
 
           {/* Connect Button */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 lg:space-x-4">
             <ConnectButton className="btn-primary-mobile lg:btn-primary" />
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+              className="lg:hidden p-2 lg:p-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 lg:w-6 lg:h-6" />
               ) : (
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 lg:w-6 lg:h-6" />
               )}
             </button>
           </div>
