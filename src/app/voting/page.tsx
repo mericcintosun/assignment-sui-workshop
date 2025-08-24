@@ -9,8 +9,21 @@ import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
 
+// Interface for real proposal data
+interface Proposal {
+  id: string;
+  title: string;
+  description: string;
+  options: string[];
+  totalVotes: number;
+  createdAt: number;
+  optionCounts: number[];
+  proposalId?: string; // Real blockchain object ID
+  resultsId?: string; // Real blockchain results object ID
+}
+
 // Mock voting data (will be replaced with real blockchain data)
-const MOCK_PROPOSALS = [
+const MOCK_PROPOSALS: Proposal[] = [
   {
     id: "1",
     title: "Add NFT Marketplace Feature",
@@ -46,12 +59,13 @@ export default function VotingPage() {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
   const sponsorAndExecute = useEnokiSponsor();
-  const [proposals, setProposals] = useState(MOCK_PROPOSALS);
+  const [proposals, setProposals] = useState<Proposal[]>(MOCK_PROPOSALS);
   const [selectedProposal, setSelectedProposal] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [lastProposalDigest, setLastProposalDigest] = useState<string | null>(
     null
   );
@@ -118,19 +132,83 @@ export default function VotingPage() {
   }, []);
 
   // Fetch real proposals from blockchain
-  useEffect(() => {
-    const fetchProposals = async () => {
+  const fetchProposalsFromBlockchain = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Fetching proposals from blockchain...");
+
+      // Method 1: Try to get shared objects (proposals are shared)
       try {
-        console.log("Fetching proposals from blockchain...");
-        // TODO: Implement proper object fetching
-        // This is a placeholder for now since we need to implement proper object discovery
+        const sharedResponse = await suiClient.getObject({
+          id: CONTRACTS.VOTING.PROPOSAL_CREATOR_OBJECT,
+          options: {
+            showContent: true,
+            showDisplay: true,
+          },
+        });
+
+        console.log("Proposal creator object:", sharedResponse);
+      } catch (error) {
+        console.log("Could not fetch proposal creator object:", error);
+      }
+
+      // Method 2: Try to get all objects of type Proposal using getObjects
+      try {
+        // For now, we'll use a different approach since queryObjects is not available
+        // We'll try to get specific proposal objects that we know exist
+        console.log("Trying alternative method to fetch proposals...");
+        
+        // Since we can't query all proposals directly, we'll rely on localStorage
+        // and the proposals that are created during the session
+        const savedProposals = localStorage.getItem("voting:proposals");
+        if (savedProposals) {
+          try {
+            const parsed = JSON.parse(savedProposals);
+            // Filter out mock proposals and keep only real ones
+            const realProposals = parsed.filter((p: Proposal) => p.proposalId);
+            console.log("Found saved real proposals:", realProposals);
+            
+            // Merge with mock proposals
+            const allProposals = [...MOCK_PROPOSALS, ...realProposals];
+            setProposals(allProposals);
+          } catch (error) {
+            console.error("Error parsing saved proposals:", error);
+          }
+        }
       } catch (error) {
         console.error("Error fetching proposals:", error);
+        // Keep existing proposals if fetch fails
       }
-    };
+    } catch (error) {
+      console.error("Error fetching proposals:", error);
+      // Keep existing proposals if fetch fails
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Load proposals from localStorage on component mount
+  useEffect(() => {
+    const savedProposals = localStorage.getItem("voting:proposals");
+    if (savedProposals) {
+      try {
+        const parsed = JSON.parse(savedProposals);
+        setProposals(parsed);
+      } catch (error) {
+        console.error("Error parsing saved proposals:", error);
+      }
+    }
+  }, []);
+
+  // Save proposals to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("voting:proposals", JSON.stringify(proposals));
+  }, [proposals]);
+
+  // Fetch proposals on component mount and when account changes
+  useEffect(() => {
     if (account) {
-      fetchProposals();
+      fetchProposalsFromBlockchain();
     }
   }, [account, suiClient]);
 
@@ -304,7 +382,7 @@ export default function VotingPage() {
       // ID'leri hatırla
       rememberPair(uiId, ids.proposalId, ids.resultsId);
 
-      // Add new proposal to local state
+      // Add new proposal to local state temporarily
       const newProposalObj = {
         id: uiId, // UI ID'yi kullan
         title: newProposal.title.trim(),
@@ -313,9 +391,16 @@ export default function VotingPage() {
         totalVotes: 0,
         createdAt: Date.now(),
         optionCounts: new Array(newProposal.options.length).fill(0),
+        proposalId: ids.proposalId,
+        resultsId: ids.resultsId,
       };
 
       setProposals([newProposalObj, ...proposals]);
+
+      // Refresh proposals from blockchain after a short delay
+      setTimeout(() => {
+        fetchProposalsFromBlockchain();
+      }, 3000); // Increased delay to ensure transaction is processed
 
       // Clear form
       setNewProposal({
@@ -567,9 +652,23 @@ export default function VotingPage() {
 
               {/* Active Proposals */}
               <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Active Proposals ({proposals.length})
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-white">
+                    Active Proposals ({proposals.length})
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    {isLoading && (
+                      <div className="text-[#C0E6FF] text-sm">Loading...</div>
+                    )}
+                    <button
+                      onClick={fetchProposalsFromBlockchain}
+                      disabled={isLoading}
+                      className="px-3 py-1 bg-[#011829] text-[#C0E6FF] rounded-lg hover:bg-[#011829]/80 transition-colors border border-white/10 text-sm"
+                    >
+                      🔄 Refresh
+                    </button>
+                  </div>
+                </div>
 
                 <div className="space-y-4">
                   {proposals.map((proposal) => (
@@ -577,6 +676,21 @@ export default function VotingPage() {
                       key={proposal.id}
                       className="bg-[#011829] rounded-lg p-4 border border-white/5"
                     >
+                      {/* Proposal Source Indicator */}
+                      {proposal.proposalId && (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#4DA2FF]/20 text-[#4DA2FF] border border-[#4DA2FF]/30">
+                            🌐 Blockchain
+                          </span>
+                        </div>
+                      )}
+                      {!proposal.proposalId && (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#C0E6FF]/20 text-[#C0E6FF] border border-[#C0E6FF]/30">
+                            📝 Mock Data
+                          </span>
+                        </div>
+                      )}
                       <div className="space-y-4">
                         <div>
                           <h3 className="text-white font-medium text-lg">
