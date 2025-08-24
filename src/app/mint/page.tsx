@@ -1,0 +1,286 @@
+"use client";
+
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { TxButton } from "../../components/TxButton";
+import { CONTRACTS } from "../../config/contracts";
+
+export default function MintPage() {
+  const account = useCurrentAccount();
+  const router = useRouter();
+  const [nftName, setNftName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [description, setDescription] = useState("");
+
+  const createNFTMintTransaction = () => {
+    // Validate inputs
+    if (!nftName.trim()) {
+      throw new Error("NFT name is required");
+    }
+    if (!imageUrl.trim()) {
+      throw new Error("Image URL is required");
+    }
+    if (!description.trim()) {
+      throw new Error("Description is required");
+    }
+
+    const tx = new Transaction();
+
+    // Helper function to convert string to BCS bytes
+    const stringToBytes = (str: string) => {
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(str);
+      // BCS format for vector<u8>: length (ULEB128) + bytes
+      const lengthBytes = [];
+      let length = bytes.length;
+      while (length >= 0x80) {
+        lengthBytes.push((length & 0x7f) | 0x80);
+        length >>= 7;
+      }
+      lengthBytes.push(length & 0x7f);
+      return new Uint8Array([...lengthBytes, ...bytes]);
+    };
+
+    // Call the mint_nft function from the deployed Move module
+    tx.moveCall({
+      target: `${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`,
+      arguments: [
+        tx.object(CONTRACTS.NFT_MINT.NFT_MINTER_OBJECT), // NFTMinter capability
+        tx.pure(stringToBytes(nftName.trim())), // name as bytes
+        tx.pure(stringToBytes(imageUrl.trim())), // image_url as bytes
+        tx.pure(stringToBytes(description.trim())), // description as bytes
+      ],
+    });
+
+    return tx;
+  };
+
+  const handleMintSuccess = () => {
+    // Clear form
+    setNftName("");
+    setImageUrl("");
+    setDescription("");
+
+    // Show success message
+    alert("NFT minted successfully! Redirecting to your NFTs...");
+
+    // Redirect to objects page
+    router.push("/objects");
+  };
+
+  if (!account) {
+    return (
+      <div className="min-h-screen bg-[#030F1C] flex items-center justify-center">
+        <div className="bg-[#011829] rounded-2xl p-8 border border-white/5 text-center">
+          <p className="text-[#C0E6FF]">
+            Please connect your wallet to mint NFTs
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#030F1C]">
+      {/* Header */}
+      <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/"
+              className="text-[#C0E6FF] hover:text-white transition-colors"
+            >
+              ← Back to Home
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="space-y-6">
+          <div className="bg-[#011829] rounded-2xl p-6 border border-white/5">
+            <h1 className="text-2xl font-semibold text-white mb-6">
+              Mint Your First NFT
+            </h1>
+
+            <div className="space-y-6">
+              {/* NFT Form */}
+              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  NFT Details
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
+                      NFT Name
+                    </label>
+                    <input
+                      type="text"
+                      value={nftName}
+                      onChange={(e) => setNftName(e.target.value)}
+                      placeholder="Enter NFT name..."
+                      className="w-full px-4 py-3 bg-[#011829] border border-white/10 rounded-xl text-white placeholder-[#C0E6FF]/50 focus:border-[#4DA2FF] focus:outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
+                      Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-4 py-3 bg-[#011829] border border-white/10 rounded-xl text-white placeholder-[#C0E6FF]/50 focus:border-[#4DA2FF] focus:outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Enter NFT description..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-[#011829] border border-white/10 rounded-xl text-white placeholder-[#C0E6FF]/50 focus:border-[#4DA2FF] focus:outline-none transition-colors resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {nftName && imageUrl && (
+                <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                  <h2 className="text-lg font-semibold text-white mb-4">
+                    NFT Preview
+                  </h2>
+
+                  <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={imageUrl}
+                        alt={nftName}
+                        className="w-24 h-24 rounded-lg object-cover border border-white/10"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%23011829'/%3E%3Ctext x='48' y='48' text-anchor='middle' dy='.3em' fill='%23C0E6FF' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-white font-medium">{nftName}</h3>
+                        {description && (
+                          <p className="text-[#C0E6FF]/70 text-sm mt-1">
+                            {description}
+                          </p>
+                        )}
+                        <p className="text-[#C0E6FF]/50 text-xs mt-2">
+                          Creator: {account.address.slice(0, 8)}...
+                          {account.address.slice(-6)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mint Button */}
+              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  Mint NFT
+                </h2>
+
+                <div className="flex items-center space-x-4">
+                  <TxButton
+                    onExecute={createNFTMintTransaction}
+                    onSuccess={handleMintSuccess}
+                    disabled={!nftName || !imageUrl}
+                    className="flex-1"
+                  >
+                    Mint NFT
+                  </TxButton>
+
+                  <Link
+                    href="/objects"
+                    className="px-6 py-3 bg-[#011829] text-[#C0E6FF] rounded-xl hover:bg-[#011829]/80 transition-colors border border-white/10"
+                  >
+                    View My NFTs
+                  </Link>
+                </div>
+
+                <p className="text-[#C0E6FF]/70 text-sm mt-3">
+                  {!nftName || !imageUrl
+                    ? "Please fill in the NFT name and image URL to mint"
+                    : "This will create a new NFT on the Sui blockchain"}
+                </p>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  How to Mint
+                </h2>
+
+                <div className="space-y-3 text-[#C0E6FF] text-sm">
+                  <p>1. Fill in the NFT details above</p>
+                  <p>2. Make sure your image URL is publicly accessible</p>
+                  <p>3. Click "Mint NFT" to create your NFT on Sui</p>
+                  <p>4. View your NFTs in the Objects page</p>
+                </div>
+              </div>
+
+              {/* Troubleshooting */}
+              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  Troubleshooting
+                </h2>
+
+                <div className="space-y-3 text-[#C0E6FF] text-sm">
+                  <p>
+                    <strong>Wallet Extension Errors:</strong> If you see
+                    chrome-extension errors, try:
+                  </p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li>Disable other wallet extensions temporarily</li>
+                    <li>Refresh the page</li>
+                    <li>Use a different browser</li>
+                  </ul>
+                  <p>
+                    <strong>Transaction Fails:</strong> Make sure you have
+                    enough SUI for gas fees
+                  </p>
+                  <p>
+                    <strong>BCS Encoding Errors:</strong> If you see
+                    "InvalidBCSBytes" errors, the app now properly encodes
+                    strings for the Move module
+                  </p>
+                  <p>
+                    <strong>Image Not Loading:</strong> Use a publicly
+                    accessible image URL (HTTPS)
+                  </p>
+                </div>
+              </div>
+
+              {/* Connected Account */}
+              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
+                <h2 className="text-lg font-semibold text-white mb-4">
+                  Connected Account
+                </h2>
+                <p className="text-[#C0E6FF] text-sm font-mono break-all">
+                  {account.address}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

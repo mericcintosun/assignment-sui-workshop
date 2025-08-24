@@ -1,0 +1,48 @@
+// Deployed contract addresses
+export const CONTRACTS = {
+  // NFT Minting Module (Updated with delete/edit capabilities)
+  NFT_MINT: {
+    PACKAGE_ID:
+      "0x5d07a98be794c07aff92b1d725e3a2bee1e46c1a8f46f21ba35cda93352c2b09",
+    NFT_MINTER_OBJECT:
+      "0x02e96ab32da0778534c94940a5a98b15653f5124f532f077466d7162a570da1e",
+  },
+
+  // Voting Module
+  VOTING: {
+    PACKAGE_ID:
+      "0xa1818ad3bd428551eb1b6330dabe007270065630b2694cc26982afab0bb1cb07",
+    PROPOSAL_CREATOR_OBJECT:
+      "0x60b07a041537c9b590297e11876fcb20e50526d97480c8429ae74d75eedc581a",
+  },
+
+  // Guestbook Module
+  GUESTBOOK: {
+    PACKAGE_ID:
+      "0xcb381d2853694ec22e2fdc33c172d9bca36897e9ddd20784608b1af6f7a1df45",
+    GUESTBOOK_OBJECT:
+      "0x3ad6d6632c94a6480dcec19d6870c22620ea320b9c72d02336141e8cf50cd65c",
+    GUESTBOOK_MANAGER_OBJECT:
+      "0x91237bddf543b5f136c93071b2542dac4b6d34665aa38e1a33f4b512dcf05cfc",
+  },
+
+  // Faucet Module
+  FAUCET: {
+    PACKAGE_ID:
+      "0xfcc18222140ac7eb4988223d7064153e90393f1117b338865bbaa111a3eef265",
+    FAUCET_OBJECT:
+      "0x4737dd246537d91c9f4bd6679c7c846e222b33a6dea96b955ad934429598d63a",
+    FAUCET_MANAGER_OBJECT:
+      "0x52c44095c1a9ed156efdb585e56d281d2ac475c65f056830fb28a9ff2ee7ff74",
+  },
+
+  // Tip Jar Module
+  TIP_JAR: {
+    PACKAGE_ID:
+      "0x5e67a89ce855640722974ce148dab73935348447e7c9de67e0dd4483dbdb6855",
+    TIP_JAR_OBJECT:
+      "0x92f16348ff35fb02189ca8f166962f7a9bb8e44b6762a31c93d5ce557047435f",
+    TIP_JAR_MANAGER_OBJECT:
+      "0xe4e0cf6cb39599997cf07d8c0fefab7ab524becdea0a348c01b5305808fa63c8",
+  },
+} as const;
