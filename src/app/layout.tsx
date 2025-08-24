@@ -30,16 +30,15 @@ export const metadata: Metadata = {
     "2025",
   ],
   authors: [{ name: "nexuSUI Team" }],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
   icons: {
     icon: [
-      { url: "/favicon.ico" },
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.png", sizes: "16x16", type: "image/png" },
     ],
-    apple: [
-      { url: "/logo-bg-remove.png", sizes: "180x180", type: "image/png" },
-    ],
-    shortcut: ["/favicon.ico"],
+    apple: "/logo-bg-remove.png",
   },
   openGraph: {
     title: "nexuSUI - Next-Gen Blockchain Platform",
@@ -90,6 +89,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/logo-bg-remove.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#4DA2FF" />
       </head>

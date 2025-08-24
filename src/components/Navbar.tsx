@@ -117,10 +117,10 @@ export default function Navbar() {
           {/* More Menu for Desktop */}
           <div className="hidden lg:flex items-center space-x-6">
             <div className="relative group">
-              <button className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <button className="flex items-center space-x-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2">
                 <span>More</span>
                 <svg
-                  className="w-4 h-4"
+                  className="w-4 h-4 transition-transform group-hover:rotate-180"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -133,18 +133,18 @@ export default function Navbar() {
                   />
                 </svg>
               </button>
-              <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-2">
+              <div className="absolute top-full right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-1">
                   {navItems.slice(6).map((item) => {
                     const isActive = pathname === item.href;
                     return (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`px-4 py-2 text-sm transition-colors ${
+                        className={`block px-4 py-2 text-sm transition-colors hover:bg-muted ${
                           isActive
                             ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {item.name}
