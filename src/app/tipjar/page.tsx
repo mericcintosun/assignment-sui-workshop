@@ -5,8 +5,8 @@ import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/bcs";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { TxButton } from "../../components/TxButton";
 import { CONTRACTS } from "../../config/contracts";
+import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 
 // Mock tip jar data (will be replaced with real blockchain data)
 const MOCK_TIP_JAR = {
@@ -40,15 +40,18 @@ const MOCK_TIP_JAR = {
 
 export default function TipJarPage() {
   const account = useCurrentAccount();
+  const sponsorAndExecute = useEnokiSponsor();
   const [tipAmount, setTipAmount] = useState("");
   const [tipMessage, setTipMessage] = useState("");
   const [totalTips, setTotalTips] = useState(MOCK_TIP_JAR.totalTips);
   const [tipCount, setTipCount] = useState(MOCK_TIP_JAR.tipCount);
+  const [isSending, setIsSending] = useState(false);
 
-  const createTipTransaction = () => {
+  const handleSendTip = async () => {
     // Validate inputs
     if (!tipAmount || parseFloat(tipAmount) <= 0) {
-      throw new Error("Please enter a valid tip amount");
+      alert("Please enter a valid tip amount");
+      return;
     }
 
     const tipAmountMicros = parseFloat(tipAmount) * 1000000; // Convert to micros
@@ -58,53 +61,58 @@ export default function TipJarPage() {
       message: tipMessage.trim() || "",
     });
 
-    const tx = new Transaction();
+    setIsSending(true);
 
-    // Serialize the message using BCS
-    const serializedMessage = bcs
-      .vector(bcs.u8())
-      .serialize(new TextEncoder().encode(tipMessage.trim() || ""));
+    try {
+      const tx = new Transaction();
 
-    console.log("Serialized message:", serializedMessage.toHex());
+      // Serialize the message using BCS
+      const serializedMessage = bcs
+        .vector(bcs.u8())
+        .serialize(new TextEncoder().encode(tipMessage.trim() || ""));
 
-    // Split coins from gas for the tip
-    const [tipCoin] = tx.splitCoins(tx.gas, [tipAmountMicros]);
+      console.log("Serialized message:", serializedMessage.toHex());
 
-    // Call the send_tip function from the deployed Move module
-    tx.moveCall({
-      target: `${CONTRACTS.TIP_JAR.PACKAGE_ID}::tipjar::send_tip`,
-      arguments: [
-        tx.object(CONTRACTS.TIP_JAR.TIP_JAR_OBJECT), // TipJar object
-        tipCoin, // Payment coin
-        tx.pure(serializedMessage.toBytes()), // message as vector<u8>
-      ],
-    });
+      // Split coins from gas for the tip
+      const [tipCoin] = tx.splitCoins(tx.gas, [tipAmountMicros]);
 
-    return tx;
+      // Call the send_tip function from the deployed Move module
+      tx.moveCall({
+        target: `${CONTRACTS.TIP_JAR.PACKAGE_ID}::tipjar::send_tip`,
+        arguments: [
+          tx.object(CONTRACTS.TIP_JAR.TIP_JAR_OBJECT), // TipJar object
+          tipCoin, // Payment coin
+          tx.pure(serializedMessage.toBytes()), // message as vector<u8>
+        ],
+      });
+
+      // Execute with Enoki sponsorship
+      const digest = await sponsorAndExecute(tx, {
+        network: "testnet",
+        allowedMoveCallTargets: [`${CONTRACTS.TIP_JAR.PACKAGE_ID}::tipjar::send_tip`],
+      });
+
+      console.log("Tip sent successfully! Digest:", digest);
+
+      // Update local state
+      setTotalTips(totalTips + tipAmountMicros);
+      setTipCount(tipCount + 1);
+
+      // Clear form
+      setTipAmount("");
+      setTipMessage("");
+
+      // Show success message
+      alert(`Tip of ${tipAmount} SUI sent successfully!`);
+    } catch (error: any) {
+      console.error("Send tip error:", error);
+      alert(error?.message || "Failed to send tip");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const handleTipSuccess = () => {
-    // Update local state
-    const amount = parseFloat(tipAmount) * 1000000; // Convert to micros
-    setTotalTips(totalTips + amount);
-    setTipCount(tipCount + 1);
 
-    // Add to recent tips
-    const newTip = {
-      id: Date.now().toString(),
-      tipper: `${account?.address.slice(0, 6)}...${account?.address.slice(-4)}`,
-      amount,
-      message: tipMessage.trim() || "",
-      timestamp: Date.now(),
-    };
-
-    // Clear form
-    setTipAmount("");
-    setTipMessage("");
-
-    // Show success message
-    alert(`Tip of ${tipAmount} SUI sent successfully!`);
-  };
 
   const formatSUI = (micros: number) => {
     return (micros / 1000000).toFixed(2);
@@ -229,20 +237,19 @@ export default function TipJarPage() {
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <TxButton
-                      onExecute={createTipTransaction}
-                      onSuccess={handleTipSuccess}
-                      disabled={!tipAmount || parseFloat(tipAmount) <= 0}
-                      className="flex-1"
+                    <button
+                      onClick={handleSendTip}
+                      disabled={!tipAmount || parseFloat(tipAmount) <= 0 || isSending}
+                      className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Send {tipAmount ? `${tipAmount} SUI` : "Tip"}
-                    </TxButton>
+                      {isSending ? "Sending..." : `Send ${tipAmount ? `${tipAmount} SUI` : "Tip"} (Gasless)`}
+                    </button>
                   </div>
 
                   <p className="text-[#C0E6FF]/70 text-sm">
                     {!tipAmount || parseFloat(tipAmount) <= 0
                       ? "Enter a tip amount to send"
-                      : `This will send ${tipAmount} SUI to the tip jar owner`}
+                      : `This will send ${tipAmount} SUI to the tip jar owner (gas fees sponsored by Enoki)`}
                   </p>
                 </div>
               </div>

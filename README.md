@@ -8,6 +8,7 @@ A comprehensive collection of modern, minimal dark theme Next.js 15 dApps built 
 ### 🔗 **Wallet Integration** - Connect with any Sui wallet using dApp Kit
 ### 📱 **Responsive Design** - Optimized for desktop and mobile devices
 ### 🎯 **TypeScript** - Full type safety throughout the application
+### ⚡ **Gasless Transactions** - All transactions sponsored by Enoki for seamless UX
 
 ## dApps Included
 
@@ -15,31 +16,35 @@ A comprehensive collection of modern, minimal dark theme Next.js 15 dApps built 
 - Create and mint NFTs with custom metadata
 - Real-time NFT preview before minting
 - View and explore owned NFTs with detailed information
-- Execute NFT minting transactions with the TxButton component
+- Execute NFT minting transactions with gasless sponsorship
 
 ### 2. 🗳️ **Voting dApp**
 - Decentralized voting with multiple options
 - Real-time voting results and statistics
 - One vote per user per proposal
 - Live updated voting results fetched from blockchain
+- Gasless proposal creation and voting
 
 ### 3. 📖 **Guestbook dApp**
 - Leave messages on-chain (max 100 characters)
 - View all messages in real-time guestbook feed
 - Permanent message storage on Sui blockchain
 - Connected wallet authentication
+- Gasless message posting
 
 ### 4. 🚰 **Token Faucet dApp**
-- Claim 10 SUI tokens for testing
+- Claim 10 SUI tokens for testing (Devnet)
 - Prevent multiple claims from same wallet
 - Display remaining faucet balance
 - One-time claim per wallet address
+- Gasless token claiming
 
 ### 5. 💰 **Tip Jar dApp**
 - Send tips to contract owner
 - Optional message with tip
 - Display total tips received
 - Recent tips history
+- Gasless tip sending
 
 ## Tech Stack
 
@@ -48,6 +53,7 @@ A comprehensive collection of modern, minimal dark theme Next.js 15 dApps built 
 - **Blockchain**: Sui dApp Kit & Sui SDK
 - **State Management**: TanStack React Query
 - **Language**: TypeScript
+- **Gas Sponsorship**: Enoki (for gasless transactions)
 
 ## Color Palette
 
@@ -67,6 +73,7 @@ Following Sui's official media kit:
 - Yarn or npm
 - Sui CLI (for local development)
 - Move compiler (included with Sui CLI)
+- Enoki API Key (for sponsored transactions)
 
 ### Installation
 
@@ -86,10 +93,20 @@ yarn install
 3. Create environment file:
 
 ```bash
-echo "NEXT_PUBLIC_SUI_NETWORK=testnet" > .env.local
+# Create .env.local file with the following content:
+NEXT_PUBLIC_SUI_NETWORK=testnet
+ENOKI_API_KEY=your_enoki_private_api_key_here
+ENOKI_DEFAULT_NETWORK=testnet
 ```
 
-4. Deploy the Move modules (required for dApp functionality):
+4. Get Enoki API Key:
+   - Visit [Enoki Portal](https://portal.enoki.mystenlabs.com/)
+   - Create a new project
+   - Generate a PRIVATE API key with SPONSORED_TRANSACTIONS feature
+   - For faucet functionality, also enable Devnet network
+   - Add the API key to your `.env.local` file
+
+5. Deploy the Move modules (required for dApp functionality):
 
 ```bash
 # NFT Minting Module
@@ -273,10 +290,37 @@ move/
 Create a `.env.local` file in the root directory:
 
 ```env
+# Sui Network Configuration
 NEXT_PUBLIC_SUI_NETWORK=testnet
+
+# Enoki Configuration (server-side only - NEVER expose with NEXT_PUBLIC)
+ENOKI_API_KEY=your_enoki_private_api_key_here
+ENOKI_DEFAULT_NETWORK=testnet
+
+# Contract Package IDs (Testnet)
+NEXT_PUBLIC_NFT_MINT_PACKAGE_ID=0x5d07a98be794c07aff92b1d725e3a2bee1e46c1a8f46f21ba35cda93352c2b09
+NEXT_PUBLIC_NFT_MINT_OBJECT_ID=0x02e96ab32da0778534c94940a5a98b15653f5124f532f077466d7162a570da1e
+
+NEXT_PUBLIC_VOTING_PACKAGE_ID=0xa1818ad3bd428551eb1b6330dabe007270065630b2694cc26982afab0bb1cb07
+NEXT_PUBLIC_VOTING_PROPOSAL_CREATOR_OBJECT=0x60b07a041537c9b590297e11876fcb20e50526d97480c8429ae74d75eedc581a
+
+NEXT_PUBLIC_GUESTBOOK_PACKAGE_ID=0xcb381d2853694ec22e2fdc33c172d9bca36897e9ddd20784608b1af6f7a1df45
+NEXT_PUBLIC_GUESTBOOK_OBJECT_ID=0x3ad6d6632c94a6480dcec19d6870c22620ea320b9c72d02336141e8cf50cd65c
+NEXT_PUBLIC_GUESTBOOK_MANAGER_OBJECT=0x91237bddf543b5f136c93071b2542dac4b6d34665aa38e1a33f4b512dcf05cfc
+
+NEXT_PUBLIC_FAUCET_PACKAGE_ID=0xfcc18222140ac7eb4988223d7064153e90393f1117b338865bbaa111a3eef265
+NEXT_PUBLIC_FAUCET_OBJECT_ID=0x4737dd246537d91c9f4bd6679c7c846e222b33a6dea96b955ad934429598d63a
+NEXT_PUBLIC_FAUCET_MANAGER_OBJECT=0x52c44095c1a9ed156efdb585e56d281d2ac475c65f056830fb28a9ff2ee7ff74
+
+NEXT_PUBLIC_TIP_JAR_PACKAGE_ID=0x5e67a89ce855640722974ce148dab73935348447e7c9de67e0dd4483dbdb6855
+NEXT_PUBLIC_TIP_JAR_OBJECT_ID=0x92f16348ff35fb02189ca8f166962f7a9bb8e44b6762a31c93d5ce557047435f
+NEXT_PUBLIC_TIP_JAR_MANAGER_OBJECT=0xe4e0cf6cb39599997cf07d8c0fefab7ab524becdea0a348c01b5305808fa63c8
 ```
 
-Available options: `localnet`, `testnet`, `mainnet`
+**Important Notes:**
+- `ENOKI_API_KEY` should be kept private and never exposed to the client
+- For faucet functionality, you need a separate Enoki API key with Devnet access
+- Available network options: `localnet`, `testnet`, `mainnet`
 
 ## Available Scripts
 
@@ -287,9 +331,22 @@ Available options: `localnet`, `testnet`, `mainnet`
 
 ## Key Components
 
-### TxButton
+### useEnokiSponsor
 
-A reusable component for executing transactions:
+A custom hook for executing gasless sponsored transactions:
+
+```tsx
+const sponsorAndExecute = useEnokiSponsor();
+
+const digest = await sponsorAndExecute(tx, {
+  network: "testnet",
+  allowedMoveCallTargets: [`${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`],
+});
+```
+
+### TxButton (Legacy)
+
+A reusable component for executing transactions (still available):
 
 ```tsx
 <TxButton onExecute={createTransaction}>Execute Transaction</TxButton>
@@ -310,8 +367,10 @@ The app uses the following providers:
 - Tailwind CSS 4 is used for styling
 - TypeScript provides full type safety
 - The dApp Kit handles all Sui interactions
-- Move module provides NFT minting functionality
+- Enoki provides gasless transaction sponsorship
+- Move modules provide blockchain functionality
 - NFTs are stored on-chain with metadata (name, image URL, description)
+- All transactions are now gasless for better user experience
 
 ## Troubleshooting
 
@@ -323,9 +382,17 @@ The app uses the following providers:
 
 ### Transaction Failures
 
-- Ensure you have sufficient gas for transactions
 - Check network connectivity
 - Verify transaction parameters
+- Ensure Enoki API key is properly configured
+- Check that the API key has the correct network permissions
+
+### Enoki Issues
+
+- Verify your Enoki API key is valid and has SPONSORED_TRANSACTIONS feature
+- Check that the API key has access to the correct network (testnet/devnet)
+- Ensure the API key is not exposed to the client (no NEXT_PUBLIC prefix)
+- Check Enoki dashboard for usage limits and quotas
 
 ### Build Issues
 

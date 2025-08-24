@@ -5,8 +5,8 @@ import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/bcs";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { TxButton } from "../../components/TxButton";
 import { CONTRACTS } from "../../config/contracts";
+import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 
 // Mock voting data (will be replaced with real blockchain data)
 const MOCK_PROPOSALS = [
@@ -44,10 +44,13 @@ const MOCK_PROPOSALS = [
 export default function VotingPage() {
   const account = useCurrentAccount();
   const suiClient = useSuiClient();
+  const sponsorAndExecute = useEnokiSponsor();
   const [proposals, setProposals] = useState(MOCK_PROPOSALS);
   const [selectedProposal, setSelectedProposal] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [newProposal, setNewProposal] = useState({
     title: "",
     description: "",
@@ -126,9 +129,10 @@ export default function VotingPage() {
     }
   }, [account, suiClient]);
 
-  const createVoteTransaction = () => {
+  const handleVote = async () => {
     if (!selectedProposal || selectedOption === null) {
-      throw new Error("Please select a proposal and option to vote");
+      alert("Please select a proposal and option to vote");
+      return;
     }
 
     console.log(
@@ -141,85 +145,38 @@ export default function VotingPage() {
     // UI id → chain id eşlemesi
     const pair = chainPairs.find((p) => p.uiId === selectedProposal);
     if (!pair) {
-      throw new Error(
-        "No real object IDs found. Create a proposal first or load IDs."
-      );
+      alert("No real object IDs found. Create a proposal first or load IDs.");
+      return;
     }
 
     // Doğrulama
     if (!isObjId(pair.proposalId) || !isObjId(pair.resultsId)) {
-      throw new Error(
-        `Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`
-      );
+      alert(`Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`);
+      return;
     }
 
-    const tx = new Transaction();
-    tx.moveCall({
-      target: `${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`,
-      arguments: [
-        tx.object(pair.proposalId), // ✅ gerçek Proposal ID
-        tx.object(pair.resultsId), // ✅ gerçek VotingResults ID
-        tx.pure.u64(selectedOption),
-      ],
-    });
+    setIsVoting(true);
 
-    return tx;
-  };
+    try {
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`,
+        arguments: [
+          tx.object(pair.proposalId), // ✅ gerçek Proposal ID
+          tx.object(pair.resultsId), // ✅ gerçek VotingResults ID
+          tx.pure.u64(selectedOption),
+        ],
+      });
 
-  const createProposalTransaction = () => {
-    // Validate inputs
-    if (!newProposal.title.trim()) {
-      throw new Error("Proposal title is required");
-    }
-    if (!newProposal.description.trim()) {
-      throw new Error("Proposal description is required");
-    }
-    if (newProposal.options.length < 2) {
-      throw new Error("At least 2 options are required");
-    }
-    if (newProposal.options.some((opt) => !opt.trim())) {
-      throw new Error("All options must have content");
-    }
+      // Execute with Enoki sponsorship
+      const digest = await sponsorAndExecute(tx, {
+        network: "testnet",
+        allowedMoveCallTargets: [`${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`],
+      });
 
-    console.log("Creating proposal with:", {
-      title: newProposal.title.trim(),
-      description: newProposal.description.trim(),
-      options: newProposal.options.map((opt) => opt.trim()),
-    });
+      console.log("Vote cast successfully! Digest:", digest);
 
-    const tx = new Transaction();
-
-    // Proper BCS encoding for vector<u8> and vector<vector<u8>>
-    const enc = new TextEncoder();
-    const titleBytes = enc.encode(newProposal.title.trim());
-    const descBytes = enc.encode(newProposal.description.trim());
-    const optionsBytes = newProposal.options.map((o) =>
-      Array.from(enc.encode(o.trim()))
-    );
-
-    console.log("Serialized data:", {
-      titleBytes: Array.from(titleBytes),
-      descriptionBytes: Array.from(descBytes),
-      optionsBytes: optionsBytes,
-    });
-
-    // Call the create_proposal function from the deployed Move module
-    tx.moveCall({
-      target: `${CONTRACTS.VOTING.PACKAGE_ID}::voting::create_proposal`,
-      arguments: [
-        tx.object(CONTRACTS.VOTING.PROPOSAL_CREATOR_OBJECT), // ProposalCreator capability
-        tx.pure(bcs.vector(bcs.u8()).serialize(titleBytes)), // title as vector<u8>
-        tx.pure(bcs.vector(bcs.u8()).serialize(descBytes)), // description as vector<u8>
-        tx.pure(bcs.vector(bcs.vector(bcs.u8())).serialize(optionsBytes)), // options as vector<vector<u8>>
-      ],
-    });
-
-    return tx;
-  };
-
-  const handleVoteSuccess = () => {
-    // Update local state
-    if (selectedProposal && selectedOption !== null) {
+      // Update local state
       const proposalIndex = proposals.findIndex(
         (p) => p.id === selectedProposal
       );
@@ -229,64 +186,139 @@ export default function VotingPage() {
         updatedProposals[proposalIndex].optionCounts[selectedOption] += 1;
         setProposals(updatedProposals);
       }
+
+      // Clear selection
+      setSelectedProposal(null);
+      setSelectedOption(null);
+
+      // Show success message
+      alert("Vote cast successfully!");
+    } catch (error: any) {
+      console.error("Vote error:", error);
+      alert(error?.message || "Failed to cast vote");
+    } finally {
+      setIsVoting(false);
     }
-
-    // Clear selection
-    setSelectedProposal(null);
-    setSelectedOption(null);
-
-    // Show success message
-    alert("Vote cast successfully!");
   };
 
-  const handleProposalSuccess = async (final: any) => {
-    // Gerçek object ID'lerini çıkar
-    const ids = await extractVotingIds(suiClient, final);
-    if (
-      !ids.proposalId ||
-      !ids.resultsId ||
-      !isObjId(ids.proposalId) ||
-      !isObjId(ids.resultsId)
-    ) {
-      alert(
-        "Could not detect created object IDs. Open console and check objectChanges/effects."
-      );
-      console.log("Transaction result:", final);
+  const handleCreateProposal = async () => {
+    // Validate inputs
+    if (!newProposal.title.trim()) {
+      alert("Proposal title is required");
+      return;
+    }
+    if (!newProposal.description.trim()) {
+      alert("Proposal description is required");
+      return;
+    }
+    if (newProposal.options.length < 2) {
+      alert("At least 2 options are required");
+      return;
+    }
+    if (newProposal.options.some((opt) => !opt.trim())) {
+      alert("All options must have content");
       return;
     }
 
-    // UI'da gösterdiğin yeni proposal'ın "ui id"si
-    const uiId = Date.now().toString();
-
-    // ID'leri hatırla
-    rememberPair(uiId, ids.proposalId, ids.resultsId);
-
-    // Add new proposal to local state
-    const newProposalObj = {
-      id: uiId, // UI ID'yi kullan
+    console.log("Creating proposal with:", {
       title: newProposal.title.trim(),
       description: newProposal.description.trim(),
       options: newProposal.options.map((opt) => opt.trim()),
-      totalVotes: 0,
-      createdAt: Date.now(),
-      optionCounts: new Array(newProposal.options.length).fill(0),
-    };
-
-    setProposals([newProposalObj, ...proposals]);
-
-    // Clear form
-    setNewProposal({
-      title: "",
-      description: "",
-      options: ["", ""],
     });
-    setShowCreateForm(false);
 
-    // Show success message with object IDs
-    alert(
-      `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}`
-    );
+    setIsCreating(true);
+
+    try {
+      const tx = new Transaction();
+
+      // Proper BCS encoding for vector<u8> and vector<vector<u8>>
+      const enc = new TextEncoder();
+      const titleBytes = enc.encode(newProposal.title.trim());
+      const descBytes = enc.encode(newProposal.description.trim());
+      const optionsBytes = newProposal.options.map((o) =>
+        Array.from(enc.encode(o.trim()))
+      );
+
+      console.log("Serialized data:", {
+        titleBytes: Array.from(titleBytes),
+        descriptionBytes: Array.from(descBytes),
+        optionsBytes: optionsBytes,
+      });
+
+      // Call the create_proposal function from the deployed Move module
+      tx.moveCall({
+        target: `${CONTRACTS.VOTING.PACKAGE_ID}::voting::create_proposal`,
+        arguments: [
+          tx.object(CONTRACTS.VOTING.PROPOSAL_CREATOR_OBJECT), // ProposalCreator capability
+          tx.pure(bcs.vector(bcs.u8()).serialize(titleBytes)), // title as vector<u8>
+          tx.pure(bcs.vector(bcs.u8()).serialize(descBytes)), // description as vector<u8>
+          tx.pure(bcs.vector(bcs.vector(bcs.u8())).serialize(optionsBytes)), // options as vector<vector<u8>>
+        ],
+      });
+
+      // Execute with Enoki sponsorship
+      const digest = await sponsorAndExecute(tx, {
+        network: "testnet",
+        allowedMoveCallTargets: [`${CONTRACTS.VOTING.PACKAGE_ID}::voting::create_proposal`],
+      });
+
+      console.log("Proposal created successfully! Digest:", digest);
+
+      // Gerçek object ID'lerini çıkar
+      const ids = await extractVotingIds(suiClient, { digest });
+      if (
+        !ids.proposalId ||
+        !ids.resultsId ||
+        !isObjId(ids.proposalId) ||
+        !isObjId(ids.resultsId)
+      ) {
+        alert(
+          "Could not detect created object IDs. Open console and check objectChanges/effects."
+        );
+        console.log("Transaction result:", { digest });
+        return;
+      }
+
+      // UI'da gösterdiğin yeni proposal'ın "ui id"si
+      const uiId = Date.now().toString();
+
+      // ID'leri hatırla
+      rememberPair(uiId, ids.proposalId, ids.resultsId);
+
+      // Add new proposal to local state
+      const newProposalObj = {
+        id: uiId, // UI ID'yi kullan
+        title: newProposal.title.trim(),
+        description: newProposal.description.trim(),
+        options: newProposal.options.map((opt) => opt.trim()),
+        totalVotes: 0,
+        createdAt: Date.now(),
+        optionCounts: new Array(newProposal.options.length).fill(0),
+      };
+
+      setProposals([newProposalObj, ...proposals]);
+
+      // Clear form
+      setNewProposal({
+        title: "",
+        description: "",
+        options: ["", ""],
+      });
+      setShowCreateForm(false);
+
+      // Show success message with object IDs
+      alert(
+        `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}`
+      );
+    } catch (error: any) {
+      console.error("Create proposal error:", error);
+      alert(error?.message || "Failed to create proposal");
+    } finally {
+      setIsCreating(false);
+    }
   };
+
+
 
   const formatTime = (timestamp: number) => {
     const now = Date.now();
@@ -454,18 +486,18 @@ export default function VotingPage() {
                       </div>
                     </div>
 
-                    <TxButton
-                      onExecute={createProposalTransaction}
-                      onSuccess={handleProposalSuccess}
+                    <button
+                      onClick={handleCreateProposal}
                       disabled={
                         !newProposal.title.trim() ||
                         !newProposal.description.trim() ||
-                        newProposal.options.some((opt) => !opt.trim())
+                        newProposal.options.some((opt) => !opt.trim()) ||
+                        isCreating
                       }
-                      className="w-full"
+                      className="w-full px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Create Proposal
-                    </TxButton>
+                      {isCreating ? "Creating..." : "Create Proposal (Gasless)"}
+                    </button>
                   </div>
                 )}
               </div>
@@ -532,17 +564,17 @@ export default function VotingPage() {
 
                         {/* Vote Button */}
                         <div className="flex justify-end">
-                          <TxButton
-                            onExecute={createVoteTransaction}
-                            onSuccess={handleVoteSuccess}
+                          <button
+                            onClick={handleVote}
                             disabled={
                               selectedProposal !== proposal.id ||
-                              selectedOption === null
+                              selectedOption === null ||
+                              isVoting
                             }
-                            className="px-6 py-2"
+                            className="px-6 py-2 bg-[#4DA2FF] text-white rounded-lg hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            Vote
-                          </TxButton>
+                            {isVoting ? "Voting..." : "Vote (Gasless)"}
+                          </button>
                         </div>
                       </div>
                     </div>

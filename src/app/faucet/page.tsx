@@ -4,46 +4,65 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { TxButton } from "../../components/TxButton";
 import { CONTRACTS } from "../../config/contracts";
+import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 
 export default function FaucetPage() {
   const account = useCurrentAccount();
+  const sponsorAndExecute = useEnokiSponsor();
   const [hasClaimed, setHasClaimed] = useState(false);
   const [faucetBalance, setFaucetBalance] = useState(0);
   const [totalClaims, setTotalClaims] = useState(0);
   const [claimAmount, setClaimAmount] = useState(10000000); // 10 SUI in micros
+  const [isClaiming, setIsClaiming] = useState(false);
 
-  const createClaimTransaction = () => {
+  const handleClaimTokens = async () => {
     // Validate that user hasn't claimed before
     if (hasClaimed) {
-      throw new Error("You have already claimed tokens from this faucet");
+      alert("You have already claimed tokens from this faucet");
+      return;
     }
 
-    const tx = new Transaction();
+    setIsClaiming(true);
 
-    // Call the claim_tokens function from the deployed Move module
-    tx.moveCall({
-      target: `${CONTRACTS.FAUCET.PACKAGE_ID}::faucet::claim_tokens`,
-      arguments: [
-        tx.object(CONTRACTS.FAUCET.FAUCET_OBJECT), // Faucet object
-      ],
-    });
+    try {
+      const tx = new Transaction();
 
-    return tx;
+      // Call the claim_tokens function from the deployed Move module
+      tx.moveCall({
+        target: `${CONTRACTS.FAUCET.PACKAGE_ID}::faucet::claim_tokens`,
+        arguments: [
+          tx.object(CONTRACTS.FAUCET.FAUCET_OBJECT), // Faucet object
+        ],
+      });
+
+      // Execute with Enoki sponsorship (devnet for faucet)
+      const digest = await sponsorAndExecute(tx, {
+        network: "devnet",
+        chain: "sui:devnet",
+        allowedMoveCallTargets: [`${CONTRACTS.FAUCET.PACKAGE_ID}::faucet::claim_tokens`],
+      });
+
+      console.log("Tokens claimed successfully! Digest:", digest);
+
+      // Update local state
+      setHasClaimed(true);
+      setFaucetBalance(faucetBalance - claimAmount);
+      setTotalClaims(totalClaims + 1);
+
+      // Show success message
+      alert(
+        "Tokens claimed successfully! Check your wallet for the 10 SUI tokens."
+      );
+    } catch (error: any) {
+      console.error("Claim error:", error);
+      alert(error?.message || "Failed to claim tokens");
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
-  const handleClaimSuccess = () => {
-    // Update local state
-    setHasClaimed(true);
-    setFaucetBalance(faucetBalance - claimAmount);
-    setTotalClaims(totalClaims + 1);
 
-    // Show success message
-    alert(
-      "Tokens claimed successfully! Check your wallet for the 10 SUI tokens."
-    );
-  };
 
   const formatSUI = (micros: number) => {
     return (micros / 1000000).toFixed(2);
@@ -160,20 +179,19 @@ export default function FaucetPage() {
                       </div>
 
                       <div className="flex items-center space-x-4">
-                        <TxButton
-                          onExecute={createClaimTransaction}
-                          onSuccess={handleClaimSuccess}
-                          disabled={faucetBalance < claimAmount}
-                          className="flex-1"
+                        <button
+                          onClick={handleClaimTokens}
+                          disabled={faucetBalance < claimAmount || isClaiming}
+                          className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          Claim {formatSUI(claimAmount)} SUI
-                        </TxButton>
+                          {isClaiming ? "Claiming..." : `Claim ${formatSUI(claimAmount)} SUI (Gasless)`}
+                        </button>
                       </div>
 
                       <p className="text-[#C0E6FF]/70 text-sm">
                         {faucetBalance < claimAmount
                           ? "Faucet is empty. Please wait for refill."
-                          : "This will send 10 SUI tokens to your wallet for testing purposes"}
+                          : "This will send 10 SUI tokens to your wallet for testing purposes (gas fees sponsored by Enoki)"}
                       </p>
                     </div>
                   )}

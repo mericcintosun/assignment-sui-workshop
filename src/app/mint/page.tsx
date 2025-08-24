@@ -5,71 +5,91 @@ import { Transaction } from "@mysten/sui/transactions";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TxButton } from "../../components/TxButton";
 import { CONTRACTS } from "../../config/contracts";
+import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 
 export default function MintPage() {
   const account = useCurrentAccount();
   const router = useRouter();
+  const sponsorAndExecute = useEnokiSponsor();
   const [nftName, setNftName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [isMinting, setIsMinting] = useState(false);
 
-  const createNFTMintTransaction = () => {
+  const handleMintNFT = async () => {
     // Validate inputs
     if (!nftName.trim()) {
-      throw new Error("NFT name is required");
+      alert("NFT name is required");
+      return;
     }
     if (!imageUrl.trim()) {
-      throw new Error("Image URL is required");
+      alert("Image URL is required");
+      return;
     }
     if (!description.trim()) {
-      throw new Error("Description is required");
+      alert("Description is required");
+      return;
     }
 
-    const tx = new Transaction();
+    setIsMinting(true);
 
-    // Helper function to convert string to BCS bytes
-    const stringToBytes = (str: string) => {
-      const encoder = new TextEncoder();
-      const bytes = encoder.encode(str);
-      // BCS format for vector<u8>: length (ULEB128) + bytes
-      const lengthBytes = [];
-      let length = bytes.length;
-      while (length >= 0x80) {
-        lengthBytes.push((length & 0x7f) | 0x80);
-        length >>= 7;
-      }
-      lengthBytes.push(length & 0x7f);
-      return new Uint8Array([...lengthBytes, ...bytes]);
-    };
+    try {
+      const tx = new Transaction();
 
-    // Call the mint_nft function from the deployed Move module
-    tx.moveCall({
-      target: `${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`,
-      arguments: [
-        tx.object(CONTRACTS.NFT_MINT.NFT_MINTER_OBJECT), // NFTMinter capability
-        tx.pure(stringToBytes(nftName.trim())), // name as bytes
-        tx.pure(stringToBytes(imageUrl.trim())), // image_url as bytes
-        tx.pure(stringToBytes(description.trim())), // description as bytes
-      ],
-    });
+      // Helper function to convert string to BCS bytes
+      const stringToBytes = (str: string) => {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        // BCS format for vector<u8>: length (ULEB128) + bytes
+        const lengthBytes = [];
+        let length = bytes.length;
+        while (length >= 0x80) {
+          lengthBytes.push((length & 0x7f) | 0x80);
+          length >>= 7;
+        }
+        lengthBytes.push(length & 0x7f);
+        return new Uint8Array([...lengthBytes, ...bytes]);
+      };
 
-    return tx;
+      // Call the mint_nft function from the deployed Move module
+      tx.moveCall({
+        target: `${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`,
+        arguments: [
+          tx.object(CONTRACTS.NFT_MINT.NFT_MINTER_OBJECT), // NFTMinter capability
+          tx.pure(stringToBytes(nftName.trim())), // name as bytes
+          tx.pure(stringToBytes(imageUrl.trim())), // image_url as bytes
+          tx.pure(stringToBytes(description.trim())), // description as bytes
+        ],
+      });
+
+      // Execute with Enoki sponsorship
+      const digest = await sponsorAndExecute(tx, {
+        network: "testnet",
+        allowedMoveCallTargets: [`${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`],
+      });
+
+      console.log("NFT minted successfully! Digest:", digest);
+      
+      // Clear form
+      setNftName("");
+      setImageUrl("");
+      setDescription("");
+
+      // Show success message
+      alert("NFT minted successfully! Redirecting to your NFTs...");
+
+      // Redirect to objects page
+      router.push("/objects");
+    } catch (error: any) {
+      console.error("Mint error:", error);
+      alert(error?.message || "Failed to mint NFT");
+    } finally {
+      setIsMinting(false);
+    }
   };
 
-  const handleMintSuccess = () => {
-    // Clear form
-    setNftName("");
-    setImageUrl("");
-    setDescription("");
 
-    // Show success message
-    alert("NFT minted successfully! Redirecting to your NFTs...");
-
-    // Redirect to objects page
-    router.push("/objects");
-  };
 
   if (!account) {
     return (
@@ -198,14 +218,13 @@ export default function MintPage() {
                 </h2>
 
                 <div className="flex items-center space-x-4">
-                  <TxButton
-                    onExecute={createNFTMintTransaction}
-                    onSuccess={handleMintSuccess}
-                    disabled={!nftName || !imageUrl}
-                    className="flex-1"
+                  <button
+                    onClick={handleMintNFT}
+                    disabled={!nftName || !imageUrl || isMinting}
+                    className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Mint NFT
-                  </TxButton>
+                    {isMinting ? "Minting..." : "Mint NFT (Gasless)"}
+                  </button>
 
                   <Link
                     href="/objects"
@@ -218,7 +237,7 @@ export default function MintPage() {
                 <p className="text-[#C0E6FF]/70 text-sm mt-3">
                   {!nftName || !imageUrl
                     ? "Please fill in the NFT name and image URL to mint"
-                    : "This will create a new NFT on the Sui blockchain"}
+                    : "This will create a new NFT on the Sui blockchain (gas fees sponsored by Enoki)"}
                 </p>
               </div>
 

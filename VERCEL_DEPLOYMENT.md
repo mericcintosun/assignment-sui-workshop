@@ -12,6 +12,13 @@ Vercel dashboard'da aşağıdaki environment variables'ları ekleyin:
 NEXT_PUBLIC_SUI_NETWORK=testnet
 ```
 
+### Enoki Configuration (Server-side only)
+
+```
+ENOKI_API_KEY=enoki_private_31a3a02aeca78ece1b1f6b086dc4437b
+ENOKI_DEFAULT_NETWORK=testnet
+```
+
 ### Contract Package IDs (Testnet)
 
 ```
@@ -106,9 +113,11 @@ Deploy sonrası:
 Deploy sonrası kontrol edin:
 
 1. **Wallet Connection**: Sui Wallet ve Slush Wallet çalışıyor mu?
-2. **Voting**: Proposal oluşturma ve voting çalışıyor mu?
-3. **NFT Minting**: NFT mint işlemi çalışıyor mu?
-4. **Faucet**: Test SUI çekme çalışıyor mu?
+2. **Voting**: Proposal oluşturma ve voting çalışıyor mu? (Gasless)
+3. **NFT Minting**: NFT mint işlemi çalışıyor mu? (Gasless)
+4. **Guestbook**: Mesaj ekleme çalışıyor mu? (Gasless)
+5. **Tip Jar**: Tip gönderme çalışıyor mu? (Gasless)
+6. **Faucet**: Test SUI çekme çalışıyor mu? (Devnet, Gasless)
 
 ## 8. Troubleshooting
 
@@ -127,6 +136,13 @@ Deploy sonrası kontrol edin:
 
 - Testnet network'ünün doğru olduğundan emin olun
 - Contract address'lerinin testnet'te deploy edildiğinden emin olun
+
+### Enoki Hatası
+
+- Enoki API key'inin doğru olduğundan emin olun
+- API key'in SPONSORED_TRANSACTIONS özelliğine sahip olduğundan emin olun
+- Faucet için Devnet erişimi olan ayrı bir API key kullanın
+- API key'in client-side'a expose edilmediğinden emin olun
 
 ## 9. Local Testing
 
@@ -180,6 +196,8 @@ yarn dev
 - **Environment Variables**: Tüm contract address'leri environment variables olarak ayarlandı
 - **Fallback Values**: Environment variables yoksa hardcoded değerler kullanılıyor
 - **Network**: Testnet olarak ayarlandı, mainnet için değiştirmeniz gerekir
+- **Enoki**: Tüm işlemler gasless olarak sponsor ediliyor
+- **API Security**: Enoki API key'i server-side'da tutuluyor, client'a expose edilmiyor
 
 ## 13. Custom Domain Setup
 

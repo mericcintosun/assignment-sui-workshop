@@ -5,8 +5,8 @@ import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/bcs";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { TxButton } from "../../components/TxButton";
 import { CONTRACTS } from "../../config/contracts";
+import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 
 // Mock guestbook messages (will be replaced with real blockchain data)
 const MOCK_MESSAGES = [
@@ -38,59 +38,78 @@ const MOCK_MESSAGES = [
 
 export default function GuestbookPage() {
   const account = useCurrentAccount();
+  const sponsorAndExecute = useEnokiSponsor();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const createAddMessageTransaction = () => {
+  const handleAddMessage = async () => {
     // Validate inputs
     if (!message.trim()) {
-      throw new Error("Message is required");
+      alert("Message is required");
+      return;
     }
     if (message.length > 100) {
-      throw new Error("Message must be 100 characters or less");
+      alert("Message must be 100 characters or less");
+      return;
     }
 
     console.log("Adding message:", message.trim());
     console.log("Network:", process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet");
     console.log("Guestbook Object ID:", CONTRACTS.GUESTBOOK.GUESTBOOK_OBJECT);
 
-    const tx = new Transaction();
+    setIsAdding(true);
 
-    // Serialize the message using BCS
-    const serializedMessage = bcs
-      .vector(bcs.u8())
-      .serialize(new TextEncoder().encode(message.trim()));
+    try {
+      const tx = new Transaction();
 
-    console.log("Serialized message:", serializedMessage.toHex());
+      // Serialize the message using BCS
+      const serializedMessage = bcs
+        .vector(bcs.u8())
+        .serialize(new TextEncoder().encode(message.trim()));
 
-    // Call the add_message function from the deployed Move module
-    tx.moveCall({
-      target: `${CONTRACTS.GUESTBOOK.PACKAGE_ID}::guestbook::add_message`,
-      arguments: [
-        tx.object(CONTRACTS.GUESTBOOK.GUESTBOOK_OBJECT), // Guestbook object
-        tx.object(CONTRACTS.GUESTBOOK.GUESTBOOK_MANAGER_OBJECT), // GuestbookManager capability
-        tx.pure(serializedMessage.toBytes()), // message as vector<u8>
-      ],
-    });
+      console.log("Serialized message:", serializedMessage.toHex());
 
-    return tx;
+      // Call the add_message function from the deployed Move module
+      tx.moveCall({
+        target: `${CONTRACTS.GUESTBOOK.PACKAGE_ID}::guestbook::add_message`,
+        arguments: [
+          tx.object(CONTRACTS.GUESTBOOK.GUESTBOOK_OBJECT), // Guestbook object
+          tx.object(CONTRACTS.GUESTBOOK.GUESTBOOK_MANAGER_OBJECT), // GuestbookManager capability
+          tx.pure(serializedMessage.toBytes()), // message as vector<u8>
+        ],
+      });
+
+      // Execute with Enoki sponsorship
+      const digest = await sponsorAndExecute(tx, {
+        network: "testnet",
+        allowedMoveCallTargets: [`${CONTRACTS.GUESTBOOK.PACKAGE_ID}::guestbook::add_message`],
+      });
+
+      console.log("Message added successfully! Digest:", digest);
+
+      // Add message to local state
+      const newMessage = {
+        id: Date.now().toString(),
+        author: `${account?.address.slice(0, 6)}...${account?.address.slice(-4)}`,
+        content: message.trim(),
+        timestamp: Date.now(),
+      };
+
+      setMessages([newMessage, ...messages]);
+      setMessage("");
+
+      // Show success message
+      alert("Message added successfully to the guestbook!");
+    } catch (error: any) {
+      console.error("Add message error:", error);
+      alert(error?.message || "Failed to add message");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
-  const handleMessageSuccess = () => {
-    // Add message to local state
-    const newMessage = {
-      id: Date.now().toString(),
-      author: `${account?.address.slice(0, 6)}...${account?.address.slice(-4)}`,
-      content: message.trim(),
-      timestamp: Date.now(),
-    };
 
-    setMessages([newMessage, ...messages]);
-    setMessage("");
-
-    // Show success message
-    alert("Message added successfully to the guestbook!");
-  };
 
   const formatTime = (timestamp: number) => {
     const now = Date.now();
@@ -172,20 +191,19 @@ export default function GuestbookPage() {
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <TxButton
-                      onExecute={createAddMessageTransaction}
-                      onSuccess={handleMessageSuccess}
-                      disabled={!message.trim()}
-                      className="flex-1"
+                    <button
+                      onClick={handleAddMessage}
+                      disabled={!message.trim() || isAdding}
+                      className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      Sign Guestbook
-                    </TxButton>
+                      {isAdding ? "Adding..." : "Sign Guestbook (Gasless)"}
+                    </button>
                   </div>
 
                   <p className="text-[#C0E6FF]/70 text-sm">
                     {!message.trim()
                       ? "Write a message to sign the guestbook"
-                      : "This will permanently store your message on the Sui blockchain"}
+                      : "This will permanently store your message on the Sui blockchain (gas fees sponsored by Enoki)"}
                   </p>
                 </div>
               </div>
