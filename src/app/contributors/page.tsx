@@ -12,8 +12,6 @@ import {
   Building2,
   Sparkles,
   Award,
-  CircleDot,
-  Building,
 } from "lucide-react";
 
 const contributors = [
@@ -30,12 +28,51 @@ const contributors = [
       twitter: "#",
     },
   },
+  {
+    name: "Caner Yakupoğlu",
+    role: "OverBlock Founder & Blockchain Developer",
+    avatar: "/contributors/caner.jpeg",
+    description:
+      "Founder of OverBlock and experienced blockchain developer with deep expertise in DeFi and smart contract development.",
+    skills: ["Blockchain", "DeFi", "Smart Contracts", "Solidity", "Move"],
+    links: {
+      github: "#",
+      linkedin: "#",
+      twitter: "#",
+    },
+  },
+  {
+    name: "Cem Ayyıldız",
+    role: "Blockchain Developer",
+    avatar: "/contributors/cem.jpeg",
+    description:
+      "Experienced blockchain developer specializing in smart contracts and decentralized applications.",
+    skills: ["Blockchain", "Smart Contracts", "Web3", "Solidity", "Move"],
+    links: {
+      github: "#",
+      linkedin: "#",
+      twitter: "#",
+    },
+  },
+  {
+    name: "Emin Karagöz",
+    role: "Blockchain Developer",
+    avatar: "/contributors/kaptan.jpeg",
+    description:
+      "Blockchain developer focused on creating innovative solutions and improving user experience in DeFi applications.",
+    skills: ["Blockchain", "DeFi", "Smart Contracts", "Move", "TypeScript"],
+    links: {
+      github: "#",
+      linkedin: "#",
+      twitter: "#",
+    },
+  },
 ];
 
 const partners = [
   {
     name: "Sui",
-    logo: CircleDot,
+    logo: "/partners/sui.png",
     description:
       "Layer 1 blockchain designed to make digital asset ownership fast, private, secure, and accessible to everyone.",
     website: "https://sui.io",
@@ -43,10 +80,10 @@ const partners = [
   },
   {
     name: "OverBlock",
-    logo: Building,
+    logo: "/partners/overblock.jpg",
     description:
       "Innovative blockchain solutions company focused on DeFi and smart contract development.",
-    website: "https://overblock.io",
+    website: "https://overblock.com",
     type: "Development Company",
   },
 ];
@@ -69,7 +106,7 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
 };
@@ -189,6 +226,90 @@ export default function ContributorsPage() {
               </div>
             </div>
           </motion.div>
+
+          {/* Other Contributors - Row Layout */}
+          <div className="mt-16">
+            <div className="text-center mb-12">
+              <h3 className="text-2xl font-bold text-foreground mb-2">
+                Team Members
+              </h3>
+              <p className="text-lg text-muted-foreground">
+                The talented developers working on NEXUSUI
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {contributors.slice(1).map((contributor, index) => {
+                return (
+                  <motion.div
+                    key={contributor.name}
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                    className="card p-6 text-center"
+                  >
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg mx-auto mb-4 image-container">
+                      <img
+                        src={contributor.avatar}
+                        alt={contributor.name}
+                        className="w-full h-full contributor-image"
+                        loading="lazy"
+                      />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-1">
+                      {contributor.name}
+                    </h3>
+                    <p className="text-primary font-medium mb-2 text-sm">
+                      {contributor.role}
+                    </p>
+                    <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
+                      {contributor.description}
+                    </p>
+
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {contributor.skills.slice(0, 3).map((skill) => (
+                          <span
+                            key={skill}
+                            className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-2 justify-center">
+                      <a
+                        href={contributor.links.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      >
+                        <Github className="w-3 h-3" />
+                      </a>
+                      <a
+                        href={contributor.links.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      >
+                        <Linkedin className="w-3 h-3" />
+                      </a>
+                      <a
+                        href={contributor.links.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      >
+                        <Twitter className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </motion.section>
 
@@ -211,7 +332,6 @@ export default function ContributorsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {partners.map((partner, index) => {
-              const LogoIcon = partner.logo;
               return (
                 <motion.div
                   key={partner.name}
@@ -220,8 +340,12 @@ export default function ContributorsPage() {
                   transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
                   className="card p-8 text-center"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/60 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <LogoIcon className="w-8 h-8 text-primary" />
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg mx-auto mb-4 flex items-center justify-center">
+                    <img
+                      src={partner.logo}
+                      alt={partner.name}
+                      className="w-16 h-16 object-contain"
+                    />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground mb-2">
                     {partner.name}
