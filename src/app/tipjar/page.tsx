@@ -1,6 +1,6 @@
 "use client";
 
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/bcs";
 import Link from "next/link";
@@ -42,6 +42,7 @@ const MOCK_TIP_JAR = {
 
 export default function TipJarPage() {
   const account = useCurrentAccount();
+  const suiClient = useSuiClient();
   const sponsorAndExecute = useEnokiSponsor();
   const [tipAmount, setTipAmount] = useState("");
   const [tipMessage, setTipMessage] = useState("");
@@ -49,6 +50,48 @@ export default function TipJarPage() {
   const [tipCount, setTipCount] = useState(MOCK_TIP_JAR.tipCount);
   const [isSending, setIsSending] = useState(false);
   const [lastDigest, setLastDigest] = useState<string | null>(null);
+  const [userCoins, setUserCoins] = useState<any[]>([]);
+  const [selectedCoinId, setSelectedCoinId] = useState<string>("");
+  const [isLoadingCoins, setIsLoadingCoins] = useState(false);
+
+  // Fetch user's SUI coins
+  useEffect(() => {
+    if (account?.address) {
+      fetchUserCoins();
+    }
+  }, [account?.address]);
+
+  const fetchUserCoins = async () => {
+    if (!account?.address) return;
+
+    setIsLoadingCoins(true);
+    try {
+      const coins = await suiClient.getCoins({
+        owner: account.address,
+        coinType: "0x2::sui::SUI",
+      });
+
+      // Filter coins with sufficient balance (at least 0.1 SUI)
+      const validCoins = coins.data.filter(
+        (coin) => parseInt(coin.balance) >= 100000 // 0.1 SUI in micros
+      );
+
+      setUserCoins(validCoins);
+
+      // Auto-select the first coin with highest balance
+      if (validCoins.length > 0) {
+        const highestBalanceCoin = validCoins.reduce((prev, current) =>
+          parseInt(prev.balance) > parseInt(current.balance) ? prev : current
+        );
+        setSelectedCoinId(highestBalanceCoin.coinObjectId);
+      }
+    } catch (error) {
+      console.error("Error fetching coins:", error);
+      toast.error("Failed to fetch your SUI coins");
+    } finally {
+      setIsLoadingCoins(false);
+    }
+  };
 
   const handleSendTip = async () => {
     // Validate inputs
@@ -57,11 +100,26 @@ export default function TipJarPage() {
       return;
     }
 
+    if (!selectedCoinId) {
+      toast.error("Please select a SUI coin to use for the tip");
+      return;
+    }
+
     const tipAmountMicros = parseFloat(tipAmount) * 1000000; // Convert to micros
+
+    // Check if selected coin has sufficient balance
+    const selectedCoin = userCoins.find(
+      (coin) => coin.coinObjectId === selectedCoinId
+    );
+    if (!selectedCoin || parseInt(selectedCoin.balance) < tipAmountMicros) {
+      toast.error("Selected coin doesn't have sufficient balance for this tip");
+      return;
+    }
 
     console.log("Sending tip:", {
       amount: tipAmount,
       message: tipMessage.trim() || "",
+      coinId: selectedCoinId,
     });
 
     setIsSending(true);
@@ -76,8 +134,10 @@ export default function TipJarPage() {
 
       console.log("Serialized message:", serializedMessage.toHex());
 
-      // Split coins from gas for the tip
-      const [tipCoin] = tx.splitCoins(tx.gas, [tipAmountMicros]);
+      // Split coins from the selected user coin (NOT from gas)
+      const [tipCoin] = tx.splitCoins(tx.object(selectedCoinId), [
+        tipAmountMicros,
+      ]);
 
       // Call the send_tip function from the deployed Move module
       tx.moveCall({
@@ -105,6 +165,9 @@ export default function TipJarPage() {
       // Update local state
       setTotalTips(totalTips + tipAmountMicros);
       setTipCount(tipCount + 1);
+
+      // Refresh coins to get updated balances
+      await fetchUserCoins();
 
       // Clear form
       setTipAmount("");
@@ -244,11 +307,61 @@ export default function TipJarPage() {
                     </div>
                   </div>
 
+                  {/* Coin Selection */}
+                  <div>
+                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
+                      Select SUI Coin
+                    </label>
+                    {isLoadingCoins ? (
+                      <div className="w-full px-4 py-3 bg-[#011829] border border-white/10 rounded-xl text-[#C0E6FF]/50">
+                        Loading your SUI coins...
+                      </div>
+                    ) : userCoins.length === 0 ? (
+                      <div className="w-full px-4 py-3 bg-[#011829] border border-red-500/20 rounded-xl text-red-400">
+                        No SUI coins found. You need at least 0.1 SUI to send a
+                        tip.
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedCoinId}
+                        onChange={(e) => setSelectedCoinId(e.target.value)}
+                        className="w-full px-4 py-3 bg-[#011829] border border-white/10 rounded-xl text-white focus:border-[#4DA2FF] focus:outline-none transition-colors"
+                      >
+                        {userCoins.map((coin) => (
+                          <option
+                            key={coin.coinObjectId}
+                            value={coin.coinObjectId}
+                          >
+                            {formatSUI(parseInt(coin.balance))} SUI (ID:{" "}
+                            {coin.coinObjectId.slice(0, 8)}...)
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {selectedCoinId && (
+                      <p className="text-[#C0E6FF]/70 text-xs mt-1">
+                        Selected coin balance:{" "}
+                        {formatSUI(
+                          parseInt(
+                            userCoins.find(
+                              (c) => c.coinObjectId === selectedCoinId
+                            )?.balance || "0"
+                          )
+                        )}{" "}
+                        SUI
+                      </p>
+                    )}
+                  </div>
+
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={handleSendTip}
                       disabled={
-                        !tipAmount || parseFloat(tipAmount) <= 0 || isSending
+                        !tipAmount ||
+                        parseFloat(tipAmount) <= 0 ||
+                        isSending ||
+                        !selectedCoinId ||
+                        userCoins.length === 0
                       }
                       className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
@@ -286,7 +399,9 @@ export default function TipJarPage() {
                   <p className="text-[#C0E6FF]/70 text-sm">
                     {!tipAmount || parseFloat(tipAmount) <= 0
                       ? "Enter a tip amount to send"
-                      : `This will send ${tipAmount} SUI to the tip jar owner (gas fees sponsored by Enoki)`}
+                      : !selectedCoinId
+                      ? "Select a SUI coin to use for the tip"
+                      : `This will send ${tipAmount} SUI from your selected coin to the tip jar owner (gas fees sponsored by Enoki)`}
                   </p>
                 </div>
               </div>
