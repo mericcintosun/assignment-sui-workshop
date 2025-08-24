@@ -40,6 +40,24 @@ export default function Providers({ children }: { children: ReactNode }) {
       | "testnet"
       | "mainnet") ?? "testnet";
 
+  // Mobil cihaz kontrolü
+  const isMobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) || window.innerWidth <= 768
+    );
+  }, []);
+
+  // Mobilde Slush Wallet, desktop'ta Sui Wallet tercih et
+  const preferredWallets = useMemo(() => {
+    if (isMobile) {
+      return ["Slush Wallet", "Sui Wallet"];
+    }
+    return ["Sui Wallet", "Slush Wallet"];
+  }, [isMobile]);
+
   // Handle wallet extension conflicts
   useEffect(() => {
     // Suppress console errors from wallet extensions
@@ -57,6 +75,8 @@ export default function Providers({ children }: { children: ReactNode }) {
         message.includes("inpage.js") ||
         message.includes("Sui Wallet") ||
         message.includes("sui-wallet") ||
+        message.includes("Slush Wallet") ||
+        message.includes("slush-wallet") ||
         message.includes("wallet-adapter") ||
         message.includes("Failed to execute") ||
         message.includes("Extension context invalidated")
@@ -72,6 +92,8 @@ export default function Providers({ children }: { children: ReactNode }) {
         message.includes("chrome-extension") ||
         message.includes("Sui Wallet") ||
         message.includes("sui-wallet") ||
+        message.includes("Slush Wallet") ||
+        message.includes("slush-wallet") ||
         message.includes("wallet-adapter") ||
         message.includes("Attempting initialization")
       ) {
@@ -87,7 +109,9 @@ export default function Providers({ children }: { children: ReactNode }) {
         message.includes("Attempting initialization") ||
         message.includes("content_script_bundle.js") ||
         message.includes("Sui Wallet") ||
-        message.includes("sui-wallet")
+        message.includes("sui-wallet") ||
+        message.includes("Slush Wallet") ||
+        message.includes("slush-wallet")
       ) {
         return; // Suppress noisy initialization logs
       }
@@ -109,7 +133,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       >
         <WalletProvider
           autoConnect
-          preferredWallets={["Sui Wallet"]}
+          preferredWallets={preferredWallets}
           adapters={[]}
           autoConnectTimeout={10000}
         >
