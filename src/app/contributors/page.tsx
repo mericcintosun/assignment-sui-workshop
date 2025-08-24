@@ -20,7 +20,7 @@ const contributors = [
     role: "Lead Developer & Project Creator",
     avatar: "/contributors/meric.jpeg",
     description:
-      "Full-stack developer passionate about blockchain technology and modern web applications. Creator of NEXUSUI platform.",
+      "Full-stack developer passionate about blockchain technology and modern web applications. Creator of nexuSUI platform.",
     skills: ["React", "Next.js", "TypeScript", "Sui", "Move"],
     links: {
       github: "https://github.com/mericcintosun",
@@ -137,7 +137,7 @@ export default function ContributorsPage() {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              The brilliant minds behind NEXUSUI, working together to build the
+              The brilliant minds behind nexuSUI, working together to build the
               future of decentralized applications.
             </p>
           </motion.div>
@@ -157,7 +157,7 @@ export default function ContributorsPage() {
               Core Contributors
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              The talented developers and innovators driving NEXUSUI forward
+              The talented developers and innovators driving nexuSUI forward
             </p>
           </div>
 
@@ -234,7 +234,7 @@ export default function ContributorsPage() {
                 Team Members
               </h3>
               <p className="text-lg text-muted-foreground">
-                The talented developers working on NEXUSUI
+                The talented developers working on nexuSUI
               </p>
             </div>
 
@@ -385,10 +385,10 @@ export default function ContributorsPage() {
               <Users className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              Join the NEXUSUI Community
+              Join the nexuSUI Community
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Interested in contributing to NEXUSUI? We're always looking for
+              Interested in contributing to nexuSUI? We're always looking for
               talented developers, designers, and blockchain enthusiasts to join
               our mission.
             </p>

@@ -4,9 +4,17 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import {
+  Droplets,
+  Coins,
+  CheckCircle,
+  AlertTriangle,
+  DollarSign,
+} from "lucide-react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import Navbar from "../../components/Navbar";
 import toast from "react-hot-toast";
 
 export default function FaucetPage() {
@@ -62,9 +70,11 @@ export default function FaucetPage() {
       toast.success(
         "Tokens claimed successfully! Check your wallet for the 10 SUI tokens. Check the explorer button below to view your transaction."
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Claim error:", error);
-      toast.error(error?.message || "Failed to claim tokens");
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to claim tokens";
+      toast.error(errorMessage);
     } finally {
       setIsClaiming(false);
     }
@@ -80,9 +90,9 @@ export default function FaucetPage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-[#030F1C] flex items-center justify-center">
-        <div className="bg-[#011829] rounded-2xl p-8 border border-white/5 text-center">
-          <p className="text-[#C0E6FF]">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="card p-8 text-center">
+          <p className="text-muted-foreground">
             Please connect your wallet to claim tokens
           </p>
         </div>
@@ -91,54 +101,49 @@ export default function FaucetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030F1C]">
-      {/* Header */}
-      <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-[#C0E6FF] hover:text-white transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="space-y-6">
-          <div className="bg-[#011829] rounded-2xl p-6 border border-white/5">
-            <h1 className="text-2xl font-semibold text-white mb-6">
-              🚰 SUI Token Faucet
+          <div className="card p-6">
+            <h1 className="text-2xl font-semibold text-foreground mb-6 flex items-center space-x-2">
+              <Droplets className="w-6 h-6 text-primary" />
+              <span>SUI Token Faucet</span>
             </h1>
 
             <div className="space-y-6">
               {/* Faucet Status */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
+              <div className="card p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
                   Faucet Status
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
-                    <p className="text-[#C0E6FF] text-sm">Available Balance</p>
-                    <p className="text-white text-2xl font-bold">
+                  <div className="card p-4">
+                    <p className="text-muted-foreground text-sm">
+                      Available Balance
+                    </p>
+                    <p className="text-foreground text-2xl font-bold">
                       {formatSUI(faucetBalance)} SUI
                     </p>
                   </div>
 
-                  <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
-                    <p className="text-[#C0E6FF] text-sm">Claim Amount</p>
-                    <p className="text-white text-2xl font-bold">
+                  <div className="card p-4">
+                    <p className="text-muted-foreground text-sm">
+                      Claim Amount
+                    </p>
+                    <p className="text-foreground text-2xl font-bold">
                       {formatSUI(claimAmount)} SUI
                     </p>
                   </div>
 
-                  <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
-                    <p className="text-[#C0E6FF] text-sm">Total Claims</p>
-                    <p className="text-white text-2xl font-bold">
+                  <div className="card p-4">
+                    <p className="text-muted-foreground text-sm">
+                      Total Claims
+                    </p>
+                    <p className="text-foreground text-2xl font-bold">
                       {totalClaims}
                     </p>
                   </div>
@@ -146,21 +151,21 @@ export default function FaucetPage() {
               </div>
 
               {/* Claim Tokens */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
+              <div className="card p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
                   Claim Your Tokens
                 </h2>
 
                 <div className="space-y-4">
                   {hasClaimed ? (
-                    <div className="bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg p-4">
+                    <div className="bg-primary/10 border border-primary rounded-lg p-4">
                       <div className="flex items-center space-x-3">
-                        <div className="text-[#4DA2FF] text-2xl">✅</div>
+                        <CheckCircle className="w-6 h-6 text-primary" />
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="text-foreground font-medium">
                             Tokens Claimed!
                           </p>
-                          <p className="text-[#C0E6FF] text-sm">
+                          <p className="text-muted-foreground text-sm">
                             You've successfully claimed {formatSUI(claimAmount)}{" "}
                             SUI tokens.
                           </p>
@@ -169,14 +174,14 @@ export default function FaucetPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
+                      <div className="card p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="text-[#4DA2FF] text-2xl">💰</div>
+                          <Coins className="w-6 h-6 text-primary" />
                           <div>
-                            <p className="text-white font-medium">
+                            <p className="text-foreground font-medium">
                               Ready to Claim
                             </p>
-                            <p className="text-[#C0E6FF] text-sm">
+                            <p className="text-muted-foreground text-sm">
                               Get {formatSUI(claimAmount)} SUI tokens for
                               testing
                             </p>
@@ -188,7 +193,7 @@ export default function FaucetPage() {
                         <button
                           onClick={handleClaimTokens}
                           disabled={faucetBalance < claimAmount || isClaiming}
-                          className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="btn-primary flex-1"
                         >
                           {isClaiming
                             ? "Claiming..."
@@ -198,13 +203,14 @@ export default function FaucetPage() {
 
                       {/* Explorer Button */}
                       {lastDigest && (
-                        <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                        <div className="mt-4 p-4 bg-primary/10 border border-primary rounded-lg">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-white font-medium">
-                                ✅ Tokens Claimed Successfully!
+                              <p className="text-foreground font-medium">
+                                <CheckCircle className="w-5 h-5 inline mr-2 text-primary" />
+                                Tokens Claimed Successfully!
                               </p>
-                              <p className="text-[#C0E6FF] text-sm">
+                              <p className="text-muted-foreground text-sm">
                                 10 SUI claimed with gasless sponsorship
                               </p>
                             </div>
@@ -219,7 +225,7 @@ export default function FaucetPage() {
                         </div>
                       )}
 
-                      <p className="text-[#C0E6FF]/70 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {faucetBalance < claimAmount
                           ? "Faucet is empty. Please wait for refill."
                           : "This will send 10 SUI tokens to your wallet for testing purposes (gas fees sponsored by Enoki)"}
@@ -230,26 +236,27 @@ export default function FaucetPage() {
               </div>
 
               {/* Important Notes */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  ⚠️ Important Notes
+              <div className="card p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-500" />
+                  <span>Important Notes</span>
                 </h2>
 
-                <div className="space-y-3 text-[#C0E6FF] text-sm">
+                <div className="space-y-3 text-muted-foreground text-sm">
                   <div className="flex items-start space-x-3">
-                    <span className="text-[#4DA2FF]">•</span>
+                    <span className="text-primary">•</span>
                     <p>This faucet is for testing purposes only</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-[#4DA2FF]">•</span>
+                    <span className="text-primary">•</span>
                     <p>Each wallet can only claim once</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-[#4DA2FF]">•</span>
+                    <span className="text-primary">•</span>
                     <p>Tokens are sent to your connected wallet address</p>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <span className="text-[#4DA2FF]">•</span>
+                    <span className="text-primary">•</span>
                     <p>
                       Use these tokens for testing transactions and interactions
                     </p>
@@ -258,16 +265,17 @@ export default function FaucetPage() {
               </div>
 
               {/* Connected Account */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
+              <div className="card p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">
                   Connected Account
                 </h2>
-                <p className="text-[#C0E6FF] text-sm font-mono break-all">
+                <p className="text-muted-foreground text-sm font-mono break-all">
                   {account.address}
                 </p>
                 {hasClaimed && (
-                  <p className="text-[#4DA2FF] text-sm mt-2">
-                    ✅ This address has already claimed tokens
+                  <p className="text-primary text-sm mt-2 flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>This address has already claimed tokens</span>
                   </p>
                 )}
               </div>

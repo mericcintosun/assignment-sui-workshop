@@ -4,6 +4,7 @@ import { ConnectButton } from "@mysten/dapp-kit";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { Palette, Vote, BookOpen, Droplets, Gift, Search } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -25,7 +26,7 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
 };
@@ -37,14 +38,14 @@ const cardVariants = {
     scale: 1,
     transition: {
       duration: 0.4,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
   hover: {
     scale: 1.02,
     transition: {
       duration: 0.2,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
 };
@@ -53,44 +54,44 @@ const features = [
   {
     title: "NFT Minting",
     description: "Create and mint unique NFTs on the Sui blockchain",
-    icon: "🎨",
+    icon: Palette,
     href: "/mint",
-    color: "from-blue-500/20 to-purple-500/20",
+    color: "from-primary/10 to-primary/5",
   },
   {
     title: "On-Chain Voting",
     description: "Participate in decentralized governance with secure voting",
-    icon: "🗳️",
+    icon: Vote,
     href: "/voting",
-    color: "from-green-500/20 to-emerald-500/20",
+    color: "from-primary/10 to-primary/5",
   },
   {
     title: "Guestbook",
     description: "Leave messages on the blockchain for eternity",
-    icon: "📝",
+    icon: BookOpen,
     href: "/guestbook",
-    color: "from-orange-500/20 to-red-500/20",
+    color: "from-primary/10 to-primary/5",
   },
   {
     title: "Token Faucet",
     description: "Get test SUI tokens for development and testing",
-    icon: "🚰",
+    icon: Droplets,
     href: "/faucet",
-    color: "from-cyan-500/20 to-blue-500/20",
+    color: "from-primary/10 to-primary/5",
   },
   {
     title: "Tip Jar",
     description: "Send tips and support creators on the blockchain",
-    icon: "💰",
+    icon: Gift,
     href: "/tipjar",
-    color: "from-yellow-500/20 to-orange-500/20",
+    color: "from-primary/10 to-primary/5",
   },
   {
     title: "Object Explorer",
     description: "Explore and manage your blockchain objects",
-    icon: "🔍",
+    icon: Search,
     href: "/objects",
-    color: "from-purple-500/20 to-pink-500/20",
+    color: "from-primary/10 to-primary/5",
   },
 ];
 
@@ -115,15 +116,13 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Welcome to
+              Welcome to{" "}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {" "}
-                NEXUSUI
+                nexuSUI
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              The next-generation blockchain platform connecting developers, creators, and users 
-              through innovative dApps. Experience the future of decentralized applications in 2025.
+              Discover a collection of innovative dApps built on nexuSUI
             </p>
 
             {!account && (
@@ -161,41 +160,46 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                variants={cardVariants}
-                whileHover="hover"
-                className="group"
-              >
-                <Link href={feature.href}>
-                  <div
-                    className={`card card-hover h-full bg-gradient-to-br ${feature.color} border-border/50`}
-                  >
-                    <div className="flex items-start space-x-4">
-                      <div className="text-4xl">{feature.icon}</div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                          {feature.title}
-                        </h3>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    <motion.div
-                      className="mt-4 flex items-center text-primary text-sm font-medium"
-                      initial={{ x: -10, opacity: 0 }}
-                      whileHover={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.2 }}
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  variants={cardVariants}
+                  whileHover="hover"
+                  className="group"
+                >
+                  <Link href={feature.href}>
+                    <div
+                      className={`card card-hover h-full bg-gradient-to-br ${feature.color} border-border/50`}
                     >
-                      Explore →
-                    </motion.div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                      <div className="flex items-start space-x-4">
+                        <div className="text-primary">
+                          <IconComponent className="w-8 h-8" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                            {feature.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {feature.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <motion.div
+                        className="mt-4 flex items-center text-primary text-sm font-medium"
+                        initial={{ x: -10, opacity: 0 }}
+                        whileHover={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        Explore →
+                      </motion.div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </motion.section>

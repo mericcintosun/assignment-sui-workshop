@@ -15,11 +15,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "NEXUSUI - Next-Gen Blockchain Platform",
+  title: "nexuSUI - Next-Gen Blockchain Platform",
   description:
     "A comprehensive ecosystem of innovative dApps built on the Sui blockchain, connecting the future of decentralized applications.",
   keywords: [
-    "NEXUSUI",
+    "nexuSUI",
     "Sui",
     "blockchain",
     "dApp",
@@ -29,19 +29,30 @@ export const metadata: Metadata = {
     "Web3",
     "2025",
   ],
-  authors: [{ name: "NEXUSUI Team" }],
+  authors: [{ name: "nexuSUI Team" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo-bg-remove.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/favicon.ico"],
+  },
   openGraph: {
-    title: "NEXUSUI - Next-Gen Blockchain Platform",
+    title: "nexuSUI - Next-Gen Blockchain Platform",
     description:
       "A comprehensive ecosystem of innovative dApps built on the Sui blockchain, connecting the future of decentralized applications.",
     url: "https://nexusui.vercel.app",
-    siteName: "NEXUSUI",
+    siteName: "nexuSUI",
     images: [
       {
         url: "/logo-bg-remove.png",
         width: 1200,
         height: 630,
-        alt: "NEXUSUI - Next-Gen Blockchain Platform",
+        alt: "nexuSUI - Next-Gen Blockchain Platform",
       },
     ],
     locale: "en_US",
@@ -49,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NEXUSUI - Next-Gen Blockchain Platform",
+    title: "nexuSUI - Next-Gen Blockchain Platform",
     description:
       "A comprehensive ecosystem of innovative dApps built on the Sui blockchain, connecting the future of decentralized applications.",
     images: ["/logo-bg-remove.png"],
@@ -80,26 +91,6 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/logo-bg-remove.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="192x192"
-          href="/logo-bg-remove.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="512x512"
-          href="/logo-bg-remove.png"
-        />
         <meta name="theme-color" content="#4DA2FF" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>

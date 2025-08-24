@@ -64,7 +64,7 @@ export default function Navbar() {
               >
                 <img
                   src="/logo.png"
-                  alt="NEXUSUI"
+                  alt="nexuSUI"
                   className="w-10 h-10 lg:w-12 lg:h-12 aspect-square object-cover"
                 />
               </motion.div>
@@ -75,7 +75,7 @@ export default function Navbar() {
               >
                 <h1 className="text-base lg:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                   <span className="block sm:hidden">nexuSUI</span>
-                  <span className="hidden sm:block">NEXUSUI</span>
+                  <span className="hidden sm:block">nexuSUI</span>
                 </h1>
                 <p className="hidden sm:block text-xs text-muted-foreground">
                   Next-gen blockchain platform
@@ -88,14 +88,12 @@ export default function Navbar() {
           <nav className="hidden lg:flex items-center space-x-6">
             {navItems.slice(0, 6).map((item) => {
               const isActive = pathname === item.href;
-              const IconComponent = item.icon;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="relative group flex items-center space-x-1"
+                  className="relative group"
                 >
-                  <IconComponent className="w-4 h-4" />
                   <span
                     className={`text-sm font-medium transition-colors duration-200 ${
                       isActive
@@ -139,19 +137,17 @@ export default function Navbar() {
                 <div className="py-2">
                   {navItems.slice(6).map((item) => {
                     const isActive = pathname === item.href;
-                    const IconComponent = item.icon;
                     return (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex items-center space-x-3 px-4 py-2 text-sm transition-colors ${
+                        className={`px-4 py-2 text-sm transition-colors ${
                           isActive
                             ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         }`}
                       >
-                        <IconComponent className="w-4 h-4" />
-                        <span>{item.name}</span>
+                        {item.name}
                       </Link>
                     );
                   })}
@@ -189,19 +185,17 @@ export default function Navbar() {
             <div className="space-y-2">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
-                const IconComponent = item.icon;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                    className={`px-4 py-2 rounded-lg transition-colors ${
                       isActive
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <IconComponent className="w-4 h-4" />
                     <span className="text-sm font-medium">{item.name}</span>
                   </Link>
                 );

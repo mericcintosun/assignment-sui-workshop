@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { User, Github, ExternalLink } from "lucide-react";
 import Navbar from "../../components/Navbar";
 
 const skills = [
@@ -17,21 +18,24 @@ const experiences = [
     title: "Full Stack Developer",
     company: "Freelance",
     period: "2023 - Present",
-    description: "Building modern web applications with React, Next.js, and blockchain technologies.",
+    description:
+      "Building modern web applications with React, Next.js, and blockchain technologies.",
     technologies: ["React", "Next.js", "TypeScript", "Sui", "Solidity"],
   },
   {
     title: "Blockchain Developer",
     company: "Personal Projects",
     period: "2022 - Present",
-    description: "Developing smart contracts and dApps on various blockchain platforms.",
+    description:
+      "Developing smart contracts and dApps on various blockchain platforms.",
     technologies: ["Move", "Solidity", "Web3.js", "Ethers.js"],
   },
   {
     title: "Frontend Developer",
     company: "Open Source",
     period: "2021 - Present",
-    description: "Contributing to open source projects and building developer tools.",
+    description:
+      "Contributing to open source projects and building developer tools.",
     technologies: ["React", "Vue.js", "Tailwind CSS", "Framer Motion"],
   },
 ];
@@ -87,7 +91,8 @@ export default function AboutPage() {
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Passionate about building the future of web applications with blockchain technology
+                Passionate about building the future of web applications with
+                blockchain technology
               </p>
             </motion.div>
 
@@ -101,31 +106,48 @@ export default function AboutPage() {
               <motion.div variants={itemVariants}>
                 <div className="card p-8">
                   <div className="text-center mb-8">
-                    <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-primary/60 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <span className="text-4xl">👨‍💻</span>
+                    <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-primary/60 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                      <img
+                        src="/contributors/meric.jpeg"
+                        alt="Meriç Cintosun"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                                         <h2 className="text-2xl font-bold text-foreground mb-2">
-                       Meriç Cintosun
-                     </h2>
-                     <p className="text-primary font-medium">Lead Developer & NEXUSUI Creator</p>
-                   </div>
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
+                      Meriç Cintosun
+                    </h2>
+                    <p className="text-primary font-medium">
+                      Lead Developer & nexuSUI Creator
+                    </p>
+                  </div>
 
-                   <div className="space-y-4 text-muted-foreground">
-                     <p>
-                       I'm a passionate developer focused on creating modern, scalable web applications 
-                       that leverage the power of blockchain technology. With expertise in React, Next.js, 
-                       and various blockchain platforms, I build applications that bridge the gap between 
-                       traditional web development and the decentralized future.
-                     </p>
-                     <p>
-                       NEXUSUI represents my commitment to sharing knowledge and building 
-                       tools that help others explore the potential of blockchain technology in 2025. Every line 
-                       of code is crafted with attention to detail, performance, and user experience.
-                     </p>
-                   </div>
+                  <div className="space-y-4 text-muted-foreground">
+                    <p>
+                      I'm a passionate developer focused on creating modern,
+                      scalable web applications that leverage the power of
+                      blockchain technology. With expertise in React, Next.js,
+                      and various blockchain platforms, I build applications
+                      that bridge the gap between traditional web development
+                      and the decentralized future.
+                    </p>
+                    <p>
+                      nexuSUI represents my commitment to sharing knowledge and
+                      building innovative solutions in the blockchain space.
+                      This platform serves as both a showcase of technical
+                      expertise and a practical resource for developers
+                      exploring the Sui ecosystem.
+                    </p>
+                  </div>
 
                   <div className="mt-8 flex flex-wrap gap-2">
-                    {["React", "Next.js", "TypeScript", "Sui", "Move", "Web3"].map((tech) => (
+                    {[
+                      "React",
+                      "Next.js",
+                      "TypeScript",
+                      "Sui",
+                      "Move",
+                      "Web3",
+                    ].map((tech) => (
                       <span
                         key={tech}
                         className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
@@ -139,13 +161,19 @@ export default function AboutPage() {
 
               <motion.div variants={itemVariants}>
                 <div className="card p-8">
-                  <h3 className="text-xl font-bold text-foreground mb-6">Skills & Expertise</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-6">
+                    Skills & Expertise
+                  </h3>
                   <div className="space-y-4">
                     {skills.map((skill) => (
                       <div key={skill.name}>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-foreground font-medium">{skill.name}</span>
-                          <span className="text-muted-foreground text-sm">{skill.level}%</span>
+                          <span className="text-foreground font-medium">
+                            {skill.name}
+                          </span>
+                          <span className="text-muted-foreground text-sm">
+                            {skill.level}%
+                          </span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
                           <motion.div
@@ -194,14 +222,18 @@ export default function AboutPage() {
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-foreground">{exp.title}</h3>
+                      <h3 className="text-xl font-bold text-foreground">
+                        {exp.title}
+                      </h3>
                       <p className="text-primary font-medium">{exp.company}</p>
                     </div>
                     <span className="text-muted-foreground text-sm mt-2 md:mt-0">
                       {exp.period}
                     </span>
                   </div>
-                  <p className="text-muted-foreground mb-4">{exp.description}</p>
+                  <p className="text-muted-foreground mb-4">
+                    {exp.description}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {exp.technologies.map((tech) => (
                       <span
@@ -232,24 +264,27 @@ export default function AboutPage() {
               Let's Connect
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Interested in blockchain development or want to collaborate on a project?
+              Interested in blockchain development or want to collaborate on a
+              project?
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="https://github.com/mericcintosun"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary"
+                className="btn-primary flex items-center space-x-2"
               >
-                GitHub Profile
+                <Github className="w-5 h-5" />
+                <span>GitHub Profile</span>
               </a>
               <a
                 href="https://github.com/mericcintosun/assignment-sui-workshop"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-secondary"
+                className="btn-secondary flex items-center space-x-2"
               >
-                View This Project
+                <ExternalLink className="w-5 h-5" />
+                <span>View This Project</span>
               </a>
             </div>
           </div>

@@ -1,6 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+  Zap,
+  Atom,
+  BookOpen,
+  Palette,
+  Film,
+  MessageSquare,
+  Link,
+  Shield,
+  RefreshCw,
+  Code,
+  Rocket,
+  Cloud,
+  Layers,
+  Network,
+  Zap as Lightning,
+} from "lucide-react";
 import Navbar from "../../components/Navbar";
 
 const techCategories = [
@@ -10,20 +27,20 @@ const techCategories = [
       {
         name: "Next.js 15",
         description: "React framework with App Router",
-        icon: "⚡",
-        color: "from-blue-500/20 to-purple-500/20",
+        icon: Zap,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "React 19",
         description: "Latest React with concurrent features",
-        icon: "⚛️",
-        color: "from-cyan-500/20 to-blue-500/20",
+        icon: Atom,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "TypeScript",
         description: "Type-safe JavaScript development",
-        icon: "📘",
-        color: "from-blue-600/20 to-blue-400/20",
+        icon: BookOpen,
+        color: "from-primary/10 to-primary/5",
       },
     ],
   },
@@ -33,20 +50,20 @@ const techCategories = [
       {
         name: "Tailwind CSS 4",
         description: "Utility-first CSS framework",
-        icon: "🎨",
-        color: "from-teal-500/20 to-cyan-500/20",
+        icon: Palette,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "Framer Motion",
         description: "Production-ready motion library",
-        icon: "🎬",
-        color: "from-purple-500/20 to-pink-500/20",
+        icon: Film,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "React Hot Toast",
         description: "Elegant toast notifications",
-        icon: "🍞",
-        color: "from-orange-500/20 to-red-500/20",
+        icon: MessageSquare,
+        color: "from-primary/10 to-primary/5",
       },
     ],
   },
@@ -56,20 +73,20 @@ const techCategories = [
       {
         name: "Sui dApp Kit",
         description: "Official Sui development toolkit",
-        icon: "🔗",
-        color: "from-green-500/20 to-emerald-500/20",
+        icon: Link,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "Sui SDK",
         description: "Sui blockchain SDK",
-        icon: "⚡",
-        color: "from-yellow-500/20 to-orange-500/20",
+        icon: Zap,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "Move Language",
         description: "Safe and secure smart contracts",
-        icon: "🛡️",
-        color: "from-indigo-500/20 to-purple-500/20",
+        icon: Shield,
+        color: "from-primary/10 to-primary/5",
       },
     ],
   },
@@ -79,14 +96,14 @@ const techCategories = [
       {
         name: "TanStack Query",
         description: "Powerful data synchronization",
-        icon: "🔄",
-        color: "from-pink-500/20 to-rose-500/20",
+        icon: RefreshCw,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "React Hooks",
         description: "Modern React state management",
-        icon: "🎣",
-        color: "from-blue-500/20 to-indigo-500/20",
+        icon: Code,
+        color: "from-primary/10 to-primary/5",
       },
     ],
   },
@@ -96,14 +113,14 @@ const techCategories = [
       {
         name: "Enoki",
         description: "Gasless transaction sponsorship",
-        icon: "🚀",
-        color: "from-violet-500/20 to-purple-500/20",
+        icon: Rocket,
+        color: "from-primary/10 to-primary/5",
       },
       {
         name: "Vercel",
         description: "Deployment and hosting platform",
-        icon: "☁️",
-        color: "from-gray-500/20 to-slate-500/20",
+        icon: Cloud,
+        color: "from-primary/10 to-primary/5",
       },
     ],
   },
@@ -158,8 +175,9 @@ export default function TechStackPage() {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              Modern technologies powering the next generation of blockchain applications in 2025.
-              Built with cutting-edge tools for optimal performance and developer experience.
+              Modern technologies powering the next generation of blockchain
+              applications in 2025. Built with cutting-edge tools for optimal
+              performance and developer experience.
             </p>
           </motion.div>
         </div>
@@ -184,31 +202,36 @@ export default function TechStackPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {category.technologies.map((tech, techIndex) => (
-                    <motion.div
-                      key={tech.name}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                      className="group"
-                    >
-                      <div
-                        className={`card card-hover h-full bg-gradient-to-br ${tech.color} border-border/50`}
+                  {category.technologies.map((tech, techIndex) => {
+                    const IconComponent = tech.icon;
+                    return (
+                      <motion.div
+                        key={tech.name}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                        className="group"
                       >
-                        <div className="flex items-start space-x-4">
-                          <div className="text-4xl">{tech.icon}</div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                              {tech.name}
-                            </h3>
-                            <p className="text-muted-foreground leading-relaxed">
-                              {tech.description}
-                            </p>
+                        <div
+                          className={`card card-hover h-full bg-gradient-to-br ${tech.color} border-border/50`}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="text-primary">
+                              <IconComponent className="w-8 h-8" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                                {tech.name}
+                              </h3>
+                              <p className="text-muted-foreground leading-relaxed">
+                                {tech.description}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             ))}
@@ -229,14 +252,15 @@ export default function TechStackPage() {
               Architecture Overview
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Modern full-stack architecture designed for scalability and performance
+              Modern full-stack architecture designed for scalability and
+              performance
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎨</span>
+                <Layers className="w-8 h-8 text-blue-500" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 Frontend Layer
@@ -248,7 +272,7 @@ export default function TechStackPage() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🔗</span>
+                <Network className="w-8 h-8 text-green-500" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 Blockchain Layer
@@ -260,7 +284,7 @@ export default function TechStackPage() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚡</span>
+                <Lightning className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 Infrastructure

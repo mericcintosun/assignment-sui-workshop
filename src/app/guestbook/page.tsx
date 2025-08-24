@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import Navbar from "../../components/Navbar";
 import toast from "react-hot-toast";
 
 // Mock guestbook messages (will be replaced with real blockchain data)
@@ -149,18 +150,7 @@ export default function GuestbookPage() {
   return (
     <div className="min-h-screen bg-[#030F1C]">
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-[#C0E6FF] hover:text-white transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">

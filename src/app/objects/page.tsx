@@ -8,6 +8,7 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 import Link from "next/link";
 import { CONTRACTS } from "../../config/contracts";
+import Navbar from "../../components/Navbar";
 import toast from "react-hot-toast";
 
 export default function ObjectsPage() {
@@ -108,9 +109,9 @@ export default function ObjectsPage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-[#030F1C] flex items-center justify-center">
-        <div className="bg-[#011829] rounded-2xl p-8 border border-white/5 text-center">
-          <p className="text-[#C0E6FF]">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="card p-8 text-center">
+          <p className="text-muted-foreground">
             Please connect your wallet to view objects
           </p>
         </div>
@@ -119,32 +120,20 @@ export default function ObjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030F1C]">
-      {/* Header */}
-      <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-[#C0E6FF] hover:text-white transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* NFTs Section */}
-          <div className="bg-[#011829] rounded-2xl p-6 border border-white/5">
-            <h1 className="text-2xl font-semibold text-white mb-4">
+          <div className="card p-6">
+            <h1 className="text-2xl font-semibold text-foreground mb-4">
               My NFTs ({nfts.length})
             </h1>
 
             {isLoading ? (
-              <div className="text-[#C0E6FF]">Loading NFTs...</div>
+              <div className="text-muted-foreground">Loading NFTs...</div>
             ) : nfts.length > 0 ? (
               <div className="space-y-6">
                 {/* Our Contract NFTs */}
