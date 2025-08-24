@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest, { params }: { params: { digest: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ digest: string }> }) {
   try {
     const { signature } = await req.json();
+    const { digest } = await params;
     
-    const res = await fetch(`https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor/${params.digest}`, {
+    const res = await fetch(`https://api.enoki.mystenlabs.com/v1/transaction-blocks/sponsor/${digest}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.ENOKI_API_KEY!}`,

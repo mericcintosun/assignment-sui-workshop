@@ -8,6 +8,10 @@ import { useRouter } from "next/navigation";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import toast from "react-hot-toast";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+import { Palette, Image, FileText, Sparkles, Eye, AlertCircle, User } from "lucide-react";
 
 export default function MintPage() {
   const account = useCurrentAccount();
@@ -22,15 +26,15 @@ export default function MintPage() {
   const handleMintNFT = async () => {
     // Validate inputs
     if (!nftName.trim()) {
-      alert("NFT name is required");
+      toast.error("NFT name is required");
       return;
     }
     if (!imageUrl.trim()) {
-      alert("Image URL is required");
+      toast.error("Image URL is required");
       return;
     }
     if (!description.trim()) {
-      alert("Description is required");
+      toast.error("Description is required");
       return;
     }
 
@@ -84,12 +88,12 @@ export default function MintPage() {
       setDescription("");
 
       // Show success message
-      alert(
+      toast.success(
         "NFT minted successfully! Check the explorer button below to view your transaction."
       );
     } catch (error: any) {
       console.error("Mint error:", error);
-      alert(error?.message || "Failed to mint NFT");
+      toast.error(error?.message || "Failed to mint NFT");
     } finally {
       setIsMinting(false);
     }
@@ -97,9 +101,9 @@ export default function MintPage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-[#030F1C] flex items-center justify-center">
-        <div className="bg-[#011829] rounded-2xl p-8 border border-white/5 text-center">
-          <p className="text-[#C0E6FF]">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="card text-center">
+          <p className="text-muted-foreground">
             Please connect your wallet to mint NFTs
           </p>
         </div>
@@ -108,28 +112,19 @@ export default function MintPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030F1C]">
-      {/* Header */}
-      <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-[#C0E6FF] hover:text-white transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="space-y-6">
-          <div className="bg-[#011829] rounded-2xl p-6 border border-white/5">
-            <h1 className="text-2xl font-semibold text-white mb-6">
-              Mint Your First NFT
-            </h1>
+          <div className="card">
+            <div className="flex items-center space-x-3 mb-6">
+              <Palette className="w-6 h-6 text-primary" />
+              <h1 className="text-2xl font-semibold text-foreground">
+                Mint Your First NFT
+              </h1>
+            </div>
 
             <div className="space-y-6">
               {/* NFT Form */}
@@ -140,8 +135,9 @@ export default function MintPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
-                      NFT Name
+                    <label className="block text-muted-foreground text-sm font-medium mb-2 flex items-center space-x-2">
+                      <FileText className="w-4 h-4" />
+                      <span>NFT Name</span>
                     </label>
                     <input
                       type="text"
@@ -153,8 +149,9 @@ export default function MintPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
-                      Image URL
+                    <label className="block text-muted-foreground text-sm font-medium mb-2 flex items-center space-x-2">
+                      <Image className="w-4 h-4" />
+                      <span>Image URL</span>
                     </label>
                     <input
                       type="url"
@@ -166,8 +163,9 @@ export default function MintPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[#C0E6FF] text-sm font-medium mb-2">
-                      Description
+                    <label className="block text-muted-foreground text-sm font-medium mb-2 flex items-center space-x-2">
+                      <FileText className="w-4 h-4" />
+                      <span>Description</span>
                     </label>
                     <textarea
                       value={description}
@@ -182,10 +180,13 @@ export default function MintPage() {
 
               {/* Preview */}
               {nftName && imageUrl && (
-                <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                  <h2 className="text-lg font-semibold text-white mb-4">
-                    NFT Preview
-                  </h2>
+                <div className="card">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Eye className="w-5 h-5 text-primary" />
+                    <h2 className="text-lg font-semibold text-foreground">
+                      NFT Preview
+                    </h2>
+                  </div>
 
                   <div className="bg-[#011829] rounded-lg p-4 border border-white/5">
                     <div className="flex items-start space-x-4">
@@ -216,10 +217,13 @@ export default function MintPage() {
               )}
 
               {/* Mint Button */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Mint NFT
-                </h2>
+              <div className="card">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Mint NFT
+                  </h2>
+                </div>
 
                 <div className="flex items-center space-x-4">
                   <button
@@ -269,10 +273,13 @@ export default function MintPage() {
               </div>
 
               {/* Instructions */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  How to Mint
-                </h2>
+              <div className="card">
+                <div className="flex items-center space-x-3 mb-4">
+                  <AlertCircle className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    How to Mint
+                  </h2>
+                </div>
 
                 <div className="space-y-3 text-[#C0E6FF] text-sm">
                   <p>1. Fill in the NFT details above</p>
@@ -283,10 +290,13 @@ export default function MintPage() {
               </div>
 
               {/* Troubleshooting */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Troubleshooting
-                </h2>
+              <div className="card">
+                <div className="flex items-center space-x-3 mb-4">
+                  <AlertCircle className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Troubleshooting
+                  </h2>
+                </div>
 
                 <div className="space-y-3 text-[#C0E6FF] text-sm">
                   <p>
@@ -315,10 +325,13 @@ export default function MintPage() {
               </div>
 
               {/* Connected Account */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Connected Account
-                </h2>
+              <div className="card">
+                <div className="flex items-center space-x-3 mb-4">
+                  <User className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Connected Account
+                  </h2>
+                </div>
                 <p className="text-[#C0E6FF] text-sm font-mono break-all">
                   {account.address}
                 </p>
@@ -327,6 +340,7 @@ export default function MintPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

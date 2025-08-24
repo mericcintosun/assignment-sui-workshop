@@ -1,0 +1,21 @@
+{
+  "name": "NEXUSUI - Next-Gen Blockchain Platform",
+  "short_name": "NEXUSUI",
+  "description": "A comprehensive ecosystem of innovative dApps built on the Sui blockchain, connecting the future of decentralized applications.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030F1C",
+  "theme_color": "#4DA2FF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-bg-remove.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

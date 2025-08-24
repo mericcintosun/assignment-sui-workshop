@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import toast from "react-hot-toast";
 
 export default function FaucetPage() {
   const account = useCurrentAccount();
@@ -21,7 +22,7 @@ export default function FaucetPage() {
   const handleClaimTokens = async () => {
     // Validate that user hasn't claimed before
     if (hasClaimed) {
-      alert("You have already claimed tokens from this faucet");
+      toast.error("You have already claimed tokens from this faucet");
       return;
     }
 
@@ -58,12 +59,12 @@ export default function FaucetPage() {
       setTotalClaims(totalClaims + 1);
 
       // Show success message
-      alert(
+      toast.success(
         "Tokens claimed successfully! Check your wallet for the 10 SUI tokens. Check the explorer button below to view your transaction."
       );
     } catch (error: any) {
       console.error("Claim error:", error);
-      alert(error?.message || "Failed to claim tokens");
+      toast.error(error?.message || "Failed to claim tokens");
     } finally {
       setIsClaiming(false);
     }

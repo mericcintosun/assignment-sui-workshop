@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../../../config/contracts";
+import toast from "react-hot-toast";
 
 export default function EditNFTPage() {
   const params = useParams();
@@ -60,7 +61,7 @@ export default function EditNFTPage() {
 
   const handleUpdateNFT = async () => {
     if (!nftName.trim() || !imageUrl.trim()) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -95,11 +96,13 @@ export default function EditNFTPage() {
       });
 
       await signAndExecuteTransaction({ transaction: tx });
-      alert("NFT updated successfully!");
+      toast.success("NFT updated successfully!");
       router.push(`/objects/${objectId}`);
     } catch (error) {
       console.error("Failed to update NFT:", error);
-      alert("Failed to update NFT. Make sure you are the creator of this NFT.");
+      toast.error(
+        "Failed to update NFT. Make sure you are the creator of this NFT."
+      );
     } finally {
       setIsLoading(false);
     }

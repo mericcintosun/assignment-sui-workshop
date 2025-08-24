@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import toast from "react-hot-toast";
 
 // Mock guestbook messages (will be replaced with real blockchain data)
 const MOCK_MESSAGES = [
@@ -48,11 +49,11 @@ export default function GuestbookPage() {
   const handleAddMessage = async () => {
     // Validate inputs
     if (!message.trim()) {
-      alert("Message is required");
+      toast.error("Message is required");
       return;
     }
     if (message.length > 100) {
-      alert("Message must be 100 characters or less");
+      toast.error("Message must be 100 characters or less");
       return;
     }
 
@@ -109,12 +110,12 @@ export default function GuestbookPage() {
       setMessage("");
 
       // Show success message
-      alert(
+      toast.success(
         "Message added successfully to the guestbook! Check the explorer button below to view your transaction."
       );
     } catch (error: any) {
       console.error("Add message error:", error);
-      alert(error?.message || "Failed to add message");
+      toast.error(error?.message || "Failed to add message");
     } finally {
       setIsAdding(false);
     }

@@ -8,6 +8,9 @@ import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import toast from "react-hot-toast";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 
 // Interface for real proposal data
 interface Proposal {
@@ -157,7 +160,7 @@ export default function VotingPage() {
         // For now, we'll use a different approach since queryObjects is not available
         // We'll try to get specific proposal objects that we know exist
         console.log("Trying alternative method to fetch proposals...");
-        
+
         // Since we can't query all proposals directly, we'll rely on localStorage
         // and the proposals that are created during the session
         const savedProposals = localStorage.getItem("voting:proposals");
@@ -167,7 +170,7 @@ export default function VotingPage() {
             // Filter out mock proposals and keep only real ones
             const realProposals = parsed.filter((p: Proposal) => p.proposalId);
             console.log("Found saved real proposals:", realProposals);
-            
+
             // Merge with mock proposals
             const allProposals = [...MOCK_PROPOSALS, ...realProposals];
             setProposals(allProposals);
@@ -214,7 +217,7 @@ export default function VotingPage() {
 
   const handleVote = async () => {
     if (!selectedProposal || selectedOption === null) {
-      alert("Please select a proposal and option to vote");
+      toast.error("Please select a proposal and option to vote");
       return;
     }
 
@@ -228,13 +231,15 @@ export default function VotingPage() {
     // UI id → chain id eşlemesi
     const pair = chainPairs.find((p) => p.uiId === selectedProposal);
     if (!pair) {
-      alert("No real object IDs found. Create a proposal first or load IDs.");
+      toast.error(
+        "No real object IDs found. Create a proposal first or load IDs."
+      );
       return;
     }
 
     // Doğrulama
     if (!isObjId(pair.proposalId) || !isObjId(pair.resultsId)) {
-      alert(
+      toast.error(
         `Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`
       );
       return;
@@ -282,12 +287,12 @@ export default function VotingPage() {
       setSelectedOption(null);
 
       // Show success message
-      alert(
+      toast.success(
         "Vote cast successfully! Check the explorer button below to view your transaction."
       );
     } catch (error: any) {
       console.error("Vote error:", error);
-      alert(error?.message || "Failed to cast vote");
+      toast.error(error?.message || "Failed to cast vote");
     } finally {
       setIsVoting(false);
     }
@@ -296,19 +301,19 @@ export default function VotingPage() {
   const handleCreateProposal = async () => {
     // Validate inputs
     if (!newProposal.title.trim()) {
-      alert("Proposal title is required");
+      toast.error("Proposal title is required");
       return;
     }
     if (!newProposal.description.trim()) {
-      alert("Proposal description is required");
+      toast.error("Proposal description is required");
       return;
     }
     if (newProposal.options.length < 2) {
-      alert("At least 2 options are required");
+      toast.error("At least 2 options are required");
       return;
     }
     if (newProposal.options.some((opt) => !opt.trim())) {
-      alert("All options must have content");
+      toast.error("All options must have content");
       return;
     }
 
@@ -369,7 +374,7 @@ export default function VotingPage() {
         !isObjId(ids.proposalId) ||
         !isObjId(ids.resultsId)
       ) {
-        alert(
+        toast.error(
           "Could not detect created object IDs. Open console and check objectChanges/effects."
         );
         console.log("Transaction result:", { digest });
@@ -411,12 +416,12 @@ export default function VotingPage() {
       setShowCreateForm(false);
 
       // Show success message with object IDs
-      alert(
+      toast.success(
         `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}\n\nCheck the explorer button below to view your transaction.`
       );
     } catch (error: any) {
       console.error("Create proposal error:", error);
-      alert(error?.message || "Failed to create proposal");
+      toast.error(error?.message || "Failed to create proposal");
     } finally {
       setIsCreating(false);
     }
@@ -474,7 +479,8 @@ export default function VotingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030F1C]">
+    <div className="min-h-screen bg-background">
+      <Navbar />
       {/* Header */}
       <header className="border-b border-white/5 bg-[#011829]/50 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -770,6 +776,7 @@ export default function VotingPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

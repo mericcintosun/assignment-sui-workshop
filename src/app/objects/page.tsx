@@ -8,6 +8,7 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 import Link from "next/link";
 import { CONTRACTS } from "../../config/contracts";
+import toast from "react-hot-toast";
 
 export default function ObjectsPage() {
   const account = useCurrentAccount();
@@ -93,13 +94,15 @@ export default function ObjectsPage() {
       });
 
       await signAndExecuteTransaction({ transaction: tx });
-      alert(`NFT "${nftName}" deleted successfully!`);
+      toast.success(`NFT "${nftName}" deleted successfully!`);
 
       // Refresh the page to update the list
       window.location.reload();
     } catch (error) {
       console.error("Failed to delete NFT:", error);
-      alert("Failed to delete NFT. Make sure you are the creator of this NFT.");
+      toast.error(
+        "Failed to delete NFT. Make sure you are the creator of this NFT."
+      );
     }
   };
 

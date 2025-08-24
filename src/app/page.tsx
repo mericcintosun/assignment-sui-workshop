@@ -4,6 +4,8 @@ import { ConnectButton } from "@mysten/dapp-kit";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -97,39 +99,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <motion.header
-        className="sticky top-0 z-50 glass border-b border-border/50"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <div className="container">
-          <div className="flex h-16 items-center justify-between">
-            <motion.div
-              className="flex items-center space-x-3"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-bold text-lg">
-                ⚡
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  Sui dApp Workshop
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Modern blockchain applications
-                </p>
-              </div>
-            </motion.div>
-
-            <div className="flex items-center space-x-4">
-              <ConnectButton className="btn-primary" />
-            </div>
-          </div>
-        </div>
-      </motion.header>
+      <Navbar />
 
       {/* Hero Section */}
       <motion.section
@@ -145,16 +115,15 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Welcome to the Future of
+              Welcome to
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 {" "}
-                Web3
+                NEXUSUI
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-              Explore the power of the Sui blockchain with our comprehensive
-              dApp workshop. From NFT minting to decentralized voting,
-              experience the next generation of web applications.
+              The next-generation blockchain platform connecting developers, creators, and users 
+              through innovative dApps. Experience the future of decentralized applications in 2025.
             </p>
 
             {!account && (
@@ -184,10 +153,10 @@ export default function HomePage() {
         <div className="container">
           <motion.div className="text-center mb-16" variants={itemVariants}>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Explore Our dApps
+              Explore Our Ecosystem
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover a collection of blockchain applications built on Sui
+              Discover a collection of innovative dApps built on NEXUSUI
             </p>
           </motion.div>
 
@@ -267,22 +236,7 @@ export default function HomePage() {
         </motion.section>
       )}
 
-      {/* Footer */}
-      <motion.footer
-        className="py-12 px-4 border-t border-border/50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.6 }}
-      >
-        <div className="container text-center">
-          <p className="text-muted-foreground">
-            Built with ❤️ on the Sui blockchain
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Modern dApp development workshop
-          </p>
-        </div>
-      </motion.footer>
+      <Footer />
     </div>
   );
 }

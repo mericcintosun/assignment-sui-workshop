@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
 import { ExplorerButton } from "../../components/ExplorerButton";
+import toast from "react-hot-toast";
 
 // Mock tip jar data (will be replaced with real blockchain data)
 const MOCK_TIP_JAR = {
@@ -52,7 +53,7 @@ export default function TipJarPage() {
   const handleSendTip = async () => {
     // Validate inputs
     if (!tipAmount || parseFloat(tipAmount) <= 0) {
-      alert("Please enter a valid tip amount");
+      toast.error("Please enter a valid tip amount");
       return;
     }
 
@@ -110,12 +111,12 @@ export default function TipJarPage() {
       setTipMessage("");
 
       // Show success message
-      alert(
+      toast.success(
         `Tip of ${tipAmount} SUI sent successfully! Check the explorer button below to view your transaction.`
       );
     } catch (error: any) {
       console.error("Send tip error:", error);
-      alert(error?.message || "Failed to send tip");
+      toast.error(error?.message || "Failed to send tip");
     } finally {
       setIsSending(false);
     }

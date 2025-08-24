@@ -54,11 +54,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl;
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-primary-mobile {
+    @apply inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200;
   }
 
   .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border;
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors duration-200;
   }
 
   .btn-ghost {
@@ -98,6 +102,10 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .border-3 {
+    border-width: 3px;
   }
 }
 
@@ -151,5 +159,27 @@
     135deg,
     hsl(var(--primary)) 0%,
     hsl(var(--primary) / 0.8) 100%
+  );
+}
+
+/* Image optimization */
+.contributor-image {
+  aspect-ratio: 1;
+  object-fit: cover;
+  transition: transform 0.2s ease-in-out;
+}
+
+.contributor-image:hover {
+  transform: scale(1.05);
+}
+
+/* Prevent layout shift */
+.image-container {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.1),
+    hsl(var(--primary) / 0.05)
   );
 }

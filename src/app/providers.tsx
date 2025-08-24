@@ -9,6 +9,7 @@ import {
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo, useState, type ReactNode, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -138,6 +139,35 @@ export default function Providers({ children }: { children: ReactNode }) {
           autoConnectTimeout={10000}
         >
           {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#011829",
+                color: "#C0E6FF",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "12px",
+                fontSize: "14px",
+                padding: "12px 16px",
+                maxWidth: "400px",
+                wordBreak: "break-word",
+                whiteSpace: "pre-wrap",
+              },
+              success: {
+                iconTheme: {
+                  primary: "#4DA2FF",
+                  secondary: "#011829",
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#011829",
+                },
+              },
+            }}
+          />
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>

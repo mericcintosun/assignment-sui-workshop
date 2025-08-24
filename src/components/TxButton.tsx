@@ -7,6 +7,7 @@ import {
 } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 type ExecResult = any;
 
@@ -46,7 +47,7 @@ export function TxButton({
   const handleClick = async () => {
     if (disabled || isExecuting) return;
     if (!account) {
-      alert("Please connect your Sui Wallet first");
+      toast.error("Please connect your Sui Wallet first");
       return;
     }
     setIsExecuting(true);
@@ -86,7 +87,7 @@ export function TxButton({
 
       onSuccess?.(final); // <-- üst bileşene tam sonucu ver
     } catch (err: any) {
-      alert(err?.message || "Transaction failed");
+      toast.error(err?.message || "Transaction failed");
       console.error(err);
     } finally {
       setIsExecuting(false);
