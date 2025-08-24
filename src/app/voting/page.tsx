@@ -53,24 +53,67 @@ export default function VotingPage() {
     description: "",
     options: ["", ""],
   });
-  const [realProposals, setRealProposals] = useState<
-    Array<{ id: string; data: unknown }>
+
+  // Gerçek object ID'leri saklamak için state - UI ID'den chain ID'ye eşleme
+  const [chainPairs, setChainPairs] = useState<
+    Array<{ uiId: string; proposalId: string; resultsId: string }>
   >([]);
-  const [realResults, setRealResults] = useState<
-    Array<{ id: string; data: unknown }>
-  >([]);
-  const [useRealTransactions, setUseRealTransactions] = useState(false);
+
+  // Basit ID doğrulayıcı
+  const isObjId = (s: string) =>
+    typeof s === "string" && /^0x[0-9a-f]+$/i.test(s);
+
+  // Transaction sonucundan Proposal & VotingResults ID'lerini çek
+  async function extractVotingIds(client: any, final: any) {
+    let oc = final.objectChanges;
+    if (!oc) {
+      const tx = await client.getTransactionBlock({
+        digest: final.digest,
+        options: { showObjectChanges: true },
+      });
+      oc = tx.objectChanges;
+    }
+    const created = (oc ?? []).filter((c: any) => c.type === "created");
+    const prop = created.find((c: any) =>
+      c.objectType?.endsWith("::voting::Proposal")
+    );
+    const res = created.find((c: any) =>
+      c.objectType?.endsWith("::voting::VotingResults")
+    );
+    return {
+      proposalId: prop?.objectId as string | undefined,
+      resultsId: res?.objectId as string | undefined,
+    };
+  }
+
+  // ID çiftini hatırla
+  function rememberPair(uiId: string, proposalId: string, resultsId: string) {
+    const next = [
+      { uiId, proposalId, resultsId },
+      ...chainPairs.filter((p) => p.uiId !== uiId),
+    ];
+    setChainPairs(next);
+    localStorage.setItem("voting:pairs", JSON.stringify(next));
+  }
+
+  // Sayfa yüklendiğinde localStorage'dan ID'leri yükle
+  useEffect(() => {
+    const raw = localStorage.getItem("voting:pairs");
+    if (raw) {
+      try {
+        const pairs = JSON.parse(raw);
+        setChainPairs(pairs);
+      } catch (e) {
+        console.error("Failed to parse saved voting pairs:", e);
+      }
+    }
+  }, []);
 
   // Fetch real proposals from blockchain
   useEffect(() => {
     const fetchProposals = async () => {
       try {
-        // For now, we'll use a simpler approach to fetch objects
-        // In a real implementation, you would use suiClient.getDynamicFields() or similar
-        // to find all Proposal and VotingResults objects
-
         console.log("Fetching proposals from blockchain...");
-
         // TODO: Implement proper object fetching
         // This is a placeholder for now since we need to implement proper object discovery
       } catch (error) {
@@ -95,80 +138,35 @@ export default function VotingPage() {
       selectedOption
     );
 
-    if (useRealTransactions) {
-      return createRealVoteTransaction();
+    // UI id → chain id eşlemesi
+    const pair = chainPairs.find((p) => p.uiId === selectedProposal);
+    if (!pair) {
+      throw new Error(
+        "No real object IDs found. Create a proposal first or load IDs."
+      );
     }
 
-    // For now, we'll use a reliable test transaction: split coins and transfer to self
-    const tx = new Transaction();
-
-    // Reliable test transaction: split coins and transfer to self
-    const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(1)]); // 1 mist
-    tx.transferObjects([coin], tx.pure.address(account?.address || ""));
-
-    return tx;
-  };
-
-  const createProposalTransaction = () => {
-    // Validate inputs
-    if (!newProposal.title.trim()) {
-      throw new Error("Proposal title is required");
-    }
-    if (!newProposal.description.trim()) {
-      throw new Error("Proposal description is required");
-    }
-    if (newProposal.options.length < 2) {
-      throw new Error("At least 2 options are required");
-    }
-    if (newProposal.options.some((opt) => !opt.trim())) {
-      throw new Error("All options must have content");
-    }
-
-    console.log("Creating proposal with:", {
-      title: newProposal.title.trim(),
-      description: newProposal.description.trim(),
-      options: newProposal.options.map((opt) => opt.trim()),
-    });
-
-    if (useRealTransactions) {
-      return createRealProposalTransaction();
-    }
-
-    // For now, create a reliable test transaction to verify Sui Wallet connection
-    // This will be replaced with actual proposal creation once we confirm transactions work
-    const tx = new Transaction();
-
-    // Reliable test transaction: split coins and transfer to self
-    const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(1)]); // 1 mist
-    tx.transferObjects([coin], tx.pure.address(account?.address || ""));
-
-    return tx;
-  };
-
-  // Real voting transaction (commented out for now)
-  const createRealVoteTransaction = () => {
-    if (!selectedProposal || selectedOption === null) {
-      throw new Error("Please select a proposal and option to vote");
+    // Doğrulama
+    if (!isObjId(pair.proposalId) || !isObjId(pair.resultsId)) {
+      throw new Error(
+        `Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`
+      );
     }
 
     const tx = new Transaction();
-
-    // Call the cast_vote function from the deployed Move module
-    // Note: This requires actual Proposal and VotingResults objects from the blockchain
     tx.moveCall({
       target: `${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`,
       arguments: [
-        tx.object("PROPOSAL_OBJECT_ID"), // Replace with actual proposal object ID
-        tx.object("VOTING_RESULTS_OBJECT_ID"), // Replace with actual results object ID
-        tx.pure.u64(selectedOption), // option_index as u64
+        tx.object(pair.proposalId), // ✅ gerçek Proposal ID
+        tx.object(pair.resultsId), // ✅ gerçek VotingResults ID
+        tx.pure.u64(selectedOption),
       ],
     });
 
     return tx;
   };
 
-  // Real proposal creation transaction (commented out for now)
-  const createRealProposalTransaction = () => {
+  const createProposalTransaction = () => {
     // Validate inputs
     if (!newProposal.title.trim()) {
       throw new Error("Proposal title is required");
@@ -241,10 +239,31 @@ export default function VotingPage() {
     alert("Vote cast successfully!");
   };
 
-  const handleProposalSuccess = () => {
+  const handleProposalSuccess = async (final: any) => {
+    // Gerçek object ID'lerini çıkar
+    const ids = await extractVotingIds(suiClient, final);
+    if (
+      !ids.proposalId ||
+      !ids.resultsId ||
+      !isObjId(ids.proposalId) ||
+      !isObjId(ids.resultsId)
+    ) {
+      alert(
+        "Could not detect created object IDs. Open console and check objectChanges/effects."
+      );
+      console.log("Transaction result:", final);
+      return;
+    }
+
+    // UI'da gösterdiğin yeni proposal'ın "ui id"si
+    const uiId = Date.now().toString();
+
+    // ID'leri hatırla
+    rememberPair(uiId, ids.proposalId, ids.resultsId);
+
     // Add new proposal to local state
     const newProposalObj = {
-      id: Date.now().toString(),
+      id: uiId, // UI ID'yi kullan
       title: newProposal.title.trim(),
       description: newProposal.description.trim(),
       options: newProposal.options.map((opt) => opt.trim()),
@@ -263,8 +282,10 @@ export default function VotingPage() {
     });
     setShowCreateForm(false);
 
-    // Show success message
-    alert("Proposal created successfully!");
+    // Show success message with object IDs
+    alert(
+      `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}`
+    );
   };
 
   const formatTime = (timestamp: number) => {
@@ -343,112 +364,6 @@ export default function VotingPage() {
             </h1>
 
             <div className="space-y-6">
-              {/* Test Transaction */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  🔧 Test Transaction
-                </h2>
-                <p className="text-[#C0E6FF]/70 text-sm mb-4">
-                  Test your wallet connection with a simple transaction
-                </p>
-                <TxButton
-                  onExecute={() => {
-                    const tx = new Transaction();
-                    // Create a reliable test transaction: split coins and transfer to self
-                    const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(1)]); // 1 mist
-                    tx.transferObjects(
-                      [coin],
-                      tx.pure.address(account?.address || "")
-                    );
-                    return tx;
-                  }}
-                  onSuccess={() =>
-                    alert(
-                      "Test transaction successful! Wallet connection is working."
-                    )
-                  }
-                  className="w-full"
-                >
-                  Test Wallet Connection (Split & Transfer)
-                </TxButton>
-
-                <TxButton
-                  onExecute={() => {
-                    const tx = new Transaction();
-                    // Alternative test with proper type arguments
-                    tx.moveCall({
-                      target: "0x2::coin::zero",
-                      typeArguments: ["0x2::sui::SUI"],
-                      arguments: [],
-                    });
-                    return tx;
-                  }}
-                  onSuccess={() =>
-                    alert("Coin zero test successful! Move calls are working.")
-                  }
-                  className="w-full"
-                >
-                  Test Coin Zero (with type args)
-                </TxButton>
-
-                <TxButton
-                  onExecute={() => {
-                    const tx = new Transaction();
-                    // Create a transaction that does nothing (empty transaction)
-                    return tx;
-                  }}
-                  onSuccess={() =>
-                    alert(
-                      "Empty transaction successful! Basic wallet connection is working."
-                    )
-                  }
-                  className="w-full"
-                >
-                  Test Empty Transaction
-                </TxButton>
-              </div>
-
-              {/* Transaction Mode Toggle */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  ⚙️ Transaction Mode
-                </h2>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[#C0E6FF] font-medium">
-                      {useRealTransactions
-                        ? "Real Move Contracts"
-                        : "Test Transactions"}
-                    </p>
-                    <p className="text-[#C0E6FF]/70 text-sm">
-                      {useRealTransactions
-                        ? "Using actual Move contract calls"
-                        : "Using simple test transactions"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setUseRealTransactions(!useRealTransactions)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      useRealTransactions ? "bg-[#4DA2FF]" : "bg-gray-600"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        useRealTransactions ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-                {useRealTransactions && (
-                  <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                    <p className="text-yellow-400 text-sm">
-                      ⚠️ Real contract mode: Make sure contracts are deployed
-                      and you have sufficient SUI for gas fees.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* Create Proposal */}
               <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
                 <div className="flex items-center justify-between mb-4">
@@ -639,100 +554,6 @@ export default function VotingPage() {
                     <p className="text-[#C0E6FF]/50">
                       No active proposals. Create the first one!
                     </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Connected Account */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Connected Account
-                </h2>
-                <p className="text-[#C0E6FF] text-sm font-mono break-all">
-                  {account.address}
-                </p>
-                <div className="mt-4 space-y-2">
-                  <p className="text-[#C0E6FF]/70 text-sm">
-                    Network: {process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet"}
-                  </p>
-                  <p className="text-[#C0E6FF]/70 text-sm">
-                    Package ID: {CONTRACTS.VOTING.PACKAGE_ID}
-                  </p>
-                  <p className="text-[#C0E6FF]/70 text-sm">
-                    Creator Object: {CONTRACTS.VOTING.PROPOSAL_CREATOR_OBJECT}
-                  </p>
-                  <p className="text-[#C0E6FF]/70 text-sm">
-                    Wallet: Sui Wallet
-                  </p>
-                  <p className="text-[#C0E6FF]/70 text-sm">
-                    Account Status: {account ? "Connected" : "Not Connected"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Debug Information */}
-              <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  🔧 Debug Information
-                </h2>
-                <div className="space-y-2 text-[#C0E6FF]/70 text-sm">
-                  <p>Environment: {process.env.NODE_ENV}</p>
-                  <p>
-                    Network: {process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet"}
-                  </p>
-                  <p>Account Connected: {account ? "Yes" : "No"}</p>
-                  <p>Account Address: {account?.address || "None"}</p>
-                  <p>Public Key: {account?.publicKey || "None"}</p>
-                  <p>Chains: {account?.chains?.join(", ") || "None"}</p>
-                  <p>
-                    Wallet Status:{" "}
-                    {account ? "✅ Connected" : "❌ Not Connected"}
-                  </p>
-                  <p>
-                    Network Status:{" "}
-                    {process.env.NEXT_PUBLIC_SUI_NETWORK === "testnet"
-                      ? "✅ Testnet"
-                      : "⚠️ Check Network"}
-                  </p>
-                  <p>Expected Network: testnet</p>
-                  <p>
-                    Current Network:{" "}
-                    {process.env.NEXT_PUBLIC_SUI_NETWORK || "testnet"}
-                  </p>
-                  <p>Account Balance: Check Sui Wallet for balance</p>
-                  <p>Gas Fees: Required for transactions</p>
-                </div>
-                {!account && (
-                  <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <p className="text-red-400 text-sm">
-                      ⚠️ Wallet not connected. Please connect your Sui Wallet
-                      first.
-                    </p>
-                  </div>
-                )}
-                {account && (
-                  <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                    <p className="text-green-400 text-sm">
-                      ✅ Wallet connected: {account.address.substring(0, 8)}...
-                      {account.address.substring(account.address.length - 8)}
-                    </p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
-                    >
-                      Refresh Page
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Clear wallet connection and reload
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        window.location.reload();
-                      }}
-                      className="mt-2 ml-2 px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
-                    >
-                      Reset Wallet Connection
-                    </button>
                   </div>
                 )}
               </div>
