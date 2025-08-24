@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
+import { ExplorerButton } from "../../components/ExplorerButton";
 
 export default function FaucetPage() {
   const account = useCurrentAccount();
@@ -15,6 +16,7 @@ export default function FaucetPage() {
   const [totalClaims, setTotalClaims] = useState(0);
   const [claimAmount, setClaimAmount] = useState(10000000); // 10 SUI in micros
   const [isClaiming, setIsClaiming] = useState(false);
+  const [lastDigest, setLastDigest] = useState<string | null>(null);
 
   const handleClaimTokens = async () => {
     // Validate that user hasn't claimed before
@@ -40,10 +42,15 @@ export default function FaucetPage() {
       const digest = await sponsorAndExecute(tx, {
         network: "devnet",
         chain: "sui:devnet",
-        allowedMoveCallTargets: [`${CONTRACTS.FAUCET.PACKAGE_ID}::faucet::claim_tokens`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.FAUCET.PACKAGE_ID}::faucet::claim_tokens`,
+        ],
       });
 
       console.log("Tokens claimed successfully! Digest:", digest);
+
+      // Store digest for explorer button
+      setLastDigest(digest);
 
       // Update local state
       setHasClaimed(true);
@@ -52,7 +59,7 @@ export default function FaucetPage() {
 
       // Show success message
       alert(
-        "Tokens claimed successfully! Check your wallet for the 10 SUI tokens."
+        "Tokens claimed successfully! Check your wallet for the 10 SUI tokens. Check the explorer button below to view your transaction."
       );
     } catch (error: any) {
       console.error("Claim error:", error);
@@ -61,8 +68,6 @@ export default function FaucetPage() {
       setIsClaiming(false);
     }
   };
-
-
 
   const formatSUI = (micros: number) => {
     return (micros / 1000000).toFixed(2);
@@ -184,9 +189,34 @@ export default function FaucetPage() {
                           disabled={faucetBalance < claimAmount || isClaiming}
                           className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          {isClaiming ? "Claiming..." : `Claim ${formatSUI(claimAmount)} SUI (Gasless)`}
+                          {isClaiming
+                            ? "Claiming..."
+                            : `Claim ${formatSUI(claimAmount)} SUI (Gasless)`}
                         </button>
                       </div>
+
+                      {/* Explorer Button */}
+                      {lastDigest && (
+                        <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-white font-medium">
+                                ✅ Tokens Claimed Successfully!
+                              </p>
+                              <p className="text-[#C0E6FF] text-sm">
+                                10 SUI claimed with gasless sponsorship
+                              </p>
+                            </div>
+                            <ExplorerButton
+                              digest={lastDigest}
+                              network="devnet"
+                              className="ml-4"
+                            >
+                              View Claim Transaction
+                            </ExplorerButton>
+                          </div>
+                        </div>
+                      )}
 
                       <p className="text-[#C0E6FF]/70 text-sm">
                         {faucetBalance < claimAmount

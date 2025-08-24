@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
+import { ExplorerButton } from "../../components/ExplorerButton";
 
 // Mock tip jar data (will be replaced with real blockchain data)
 const MOCK_TIP_JAR = {
@@ -46,6 +47,7 @@ export default function TipJarPage() {
   const [totalTips, setTotalTips] = useState(MOCK_TIP_JAR.totalTips);
   const [tipCount, setTipCount] = useState(MOCK_TIP_JAR.tipCount);
   const [isSending, setIsSending] = useState(false);
+  const [lastDigest, setLastDigest] = useState<string | null>(null);
 
   const handleSendTip = async () => {
     // Validate inputs
@@ -89,10 +91,15 @@ export default function TipJarPage() {
       // Execute with Enoki sponsorship
       const digest = await sponsorAndExecute(tx, {
         network: "testnet",
-        allowedMoveCallTargets: [`${CONTRACTS.TIP_JAR.PACKAGE_ID}::tipjar::send_tip`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.TIP_JAR.PACKAGE_ID}::tipjar::send_tip`,
+        ],
       });
 
       console.log("Tip sent successfully! Digest:", digest);
+
+      // Store digest for explorer button
+      setLastDigest(digest);
 
       // Update local state
       setTotalTips(totalTips + tipAmountMicros);
@@ -103,7 +110,9 @@ export default function TipJarPage() {
       setTipMessage("");
 
       // Show success message
-      alert(`Tip of ${tipAmount} SUI sent successfully!`);
+      alert(
+        `Tip of ${tipAmount} SUI sent successfully! Check the explorer button below to view your transaction.`
+      );
     } catch (error: any) {
       console.error("Send tip error:", error);
       alert(error?.message || "Failed to send tip");
@@ -111,8 +120,6 @@ export default function TipJarPage() {
       setIsSending(false);
     }
   };
-
-
 
   const formatSUI = (micros: number) => {
     return (micros / 1000000).toFixed(2);
@@ -239,12 +246,41 @@ export default function TipJarPage() {
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={handleSendTip}
-                      disabled={!tipAmount || parseFloat(tipAmount) <= 0 || isSending}
+                      disabled={
+                        !tipAmount || parseFloat(tipAmount) <= 0 || isSending
+                      }
                       className="flex-1 px-6 py-3 bg-[#4DA2FF] text-white rounded-xl hover:bg-[#4DA2FF]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      {isSending ? "Sending..." : `Send ${tipAmount ? `${tipAmount} SUI` : "Tip"} (Gasless)`}
+                      {isSending
+                        ? "Sending..."
+                        : `Send ${
+                            tipAmount ? `${tipAmount} SUI` : "Tip"
+                          } (Gasless)`}
                     </button>
                   </div>
+
+                  {/* Explorer Button */}
+                  {lastDigest && (
+                    <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white font-medium">
+                            ✅ Tip Sent Successfully!
+                          </p>
+                          <p className="text-[#C0E6FF] text-sm">
+                            Tip sent with gasless sponsorship
+                          </p>
+                        </div>
+                        <ExplorerButton
+                          digest={lastDigest}
+                          network="testnet"
+                          className="ml-4"
+                        >
+                          View Tip Transaction
+                        </ExplorerButton>
+                      </div>
+                    </div>
+                  )}
 
                   <p className="text-[#C0E6FF]/70 text-sm">
                     {!tipAmount || parseFloat(tipAmount) <= 0

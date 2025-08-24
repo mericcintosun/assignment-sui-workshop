@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
+import { ExplorerButton } from "../../components/ExplorerButton";
 
 export default function MintPage() {
   const account = useCurrentAccount();
@@ -16,6 +17,7 @@ export default function MintPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
   const [isMinting, setIsMinting] = useState(false);
+  const [lastDigest, setLastDigest] = useState<string | null>(null);
 
   const handleMintNFT = async () => {
     // Validate inputs
@@ -66,21 +68,25 @@ export default function MintPage() {
       // Execute with Enoki sponsorship
       const digest = await sponsorAndExecute(tx, {
         network: "testnet",
-        allowedMoveCallTargets: [`${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.NFT_MINT.PACKAGE_ID}::nft_mint::mint_nft`,
+        ],
       });
 
       console.log("NFT minted successfully! Digest:", digest);
-      
+
+      // Store digest for explorer button
+      setLastDigest(digest);
+
       // Clear form
       setNftName("");
       setImageUrl("");
       setDescription("");
 
       // Show success message
-      alert("NFT minted successfully! Redirecting to your NFTs...");
-
-      // Redirect to objects page
-      router.push("/objects");
+      alert(
+        "NFT minted successfully! Check the explorer button below to view your transaction."
+      );
     } catch (error: any) {
       console.error("Mint error:", error);
       alert(error?.message || "Failed to mint NFT");
@@ -88,8 +94,6 @@ export default function MintPage() {
       setIsMinting(false);
     }
   };
-
-
 
   if (!account) {
     return (
@@ -233,6 +237,29 @@ export default function MintPage() {
                     View My NFTs
                   </Link>
                 </div>
+
+                {/* Explorer Button */}
+                {lastDigest && (
+                  <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium">
+                          ✅ NFT Minted Successfully!
+                        </p>
+                        <p className="text-[#C0E6FF] text-sm">
+                          Transaction completed with gasless sponsorship
+                        </p>
+                      </div>
+                      <ExplorerButton
+                        digest={lastDigest}
+                        network="testnet"
+                        className="ml-4"
+                      >
+                        View NFT Transaction
+                      </ExplorerButton>
+                    </div>
+                  </div>
+                )}
 
                 <p className="text-[#C0E6FF]/70 text-sm mt-3">
                   {!nftName || !imageUrl

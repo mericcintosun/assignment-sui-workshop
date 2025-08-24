@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
+import { ExplorerButton } from "../../components/ExplorerButton";
 
 // Mock voting data (will be replaced with real blockchain data)
 const MOCK_PROPOSALS = [
@@ -51,6 +52,10 @@ export default function VotingPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [lastProposalDigest, setLastProposalDigest] = useState<string | null>(
+    null
+  );
+  const [lastVoteDigest, setLastVoteDigest] = useState<string | null>(null);
   const [newProposal, setNewProposal] = useState({
     title: "",
     description: "",
@@ -151,7 +156,9 @@ export default function VotingPage() {
 
     // Doğrulama
     if (!isObjId(pair.proposalId) || !isObjId(pair.resultsId)) {
-      alert(`Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`);
+      alert(
+        `Invalid object ids:\nproposal=${pair.proposalId}\nresults=${pair.resultsId}`
+      );
       return;
     }
 
@@ -171,10 +178,15 @@ export default function VotingPage() {
       // Execute with Enoki sponsorship
       const digest = await sponsorAndExecute(tx, {
         network: "testnet",
-        allowedMoveCallTargets: [`${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.VOTING.PACKAGE_ID}::voting::cast_vote`,
+        ],
       });
 
       console.log("Vote cast successfully! Digest:", digest);
+
+      // Store digest for explorer button
+      setLastVoteDigest(digest);
 
       // Update local state
       const proposalIndex = proposals.findIndex(
@@ -192,7 +204,9 @@ export default function VotingPage() {
       setSelectedOption(null);
 
       // Show success message
-      alert("Vote cast successfully!");
+      alert(
+        "Vote cast successfully! Check the explorer button below to view your transaction."
+      );
     } catch (error: any) {
       console.error("Vote error:", error);
       alert(error?.message || "Failed to cast vote");
@@ -259,10 +273,15 @@ export default function VotingPage() {
       // Execute with Enoki sponsorship
       const digest = await sponsorAndExecute(tx, {
         network: "testnet",
-        allowedMoveCallTargets: [`${CONTRACTS.VOTING.PACKAGE_ID}::voting::create_proposal`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.VOTING.PACKAGE_ID}::voting::create_proposal`,
+        ],
       });
 
       console.log("Proposal created successfully! Digest:", digest);
+
+      // Store digest for explorer button
+      setLastProposalDigest(digest);
 
       // Gerçek object ID'lerini çıkar
       const ids = await extractVotingIds(suiClient, { digest });
@@ -308,7 +327,7 @@ export default function VotingPage() {
 
       // Show success message with object IDs
       alert(
-        `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}`
+        `✅ Proposal created successfully!\nProposalID: ${ids.proposalId}\nResultsID: ${ids.resultsId}\n\nCheck the explorer button below to view your transaction.`
       );
     } catch (error: any) {
       console.error("Create proposal error:", error);
@@ -317,8 +336,6 @@ export default function VotingPage() {
       setIsCreating(false);
     }
   };
-
-
 
   const formatTime = (timestamp: number) => {
     const now = Date.now();
@@ -500,7 +517,53 @@ export default function VotingPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Explorer Button for Proposal Creation */}
+                {lastProposalDigest && (
+                  <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium">
+                          ✅ Proposal Created Successfully!
+                        </p>
+                        <p className="text-[#C0E6FF] text-sm">
+                          Proposal created with gasless sponsorship
+                        </p>
+                      </div>
+                      <ExplorerButton
+                        digest={lastProposalDigest}
+                        network="testnet"
+                        className="ml-4"
+                      >
+                        View Proposal Transaction
+                      </ExplorerButton>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Explorer Button for Voting */}
+              {lastVoteDigest && (
+                <div className="mb-6 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-medium">
+                        ✅ Vote Cast Successfully!
+                      </p>
+                      <p className="text-[#C0E6FF] text-sm">
+                        Vote submitted with gasless sponsorship
+                      </p>
+                    </div>
+                    <ExplorerButton
+                      digest={lastVoteDigest}
+                      network="testnet"
+                      className="ml-4"
+                    >
+                      View Vote Transaction
+                    </ExplorerButton>
+                  </div>
+                </div>
+              )}
 
               {/* Active Proposals */}
               <div className="bg-[#030F1C] rounded-xl p-6 border border-white/5">

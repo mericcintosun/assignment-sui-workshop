@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CONTRACTS } from "../../config/contracts";
 import { useEnokiSponsor } from "../../lib/useEnokiSponsor";
+import { ExplorerButton } from "../../components/ExplorerButton";
 
 // Mock guestbook messages (will be replaced with real blockchain data)
 const MOCK_MESSAGES = [
@@ -42,6 +43,7 @@ export default function GuestbookPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [isAdding, setIsAdding] = useState(false);
+  const [lastDigest, setLastDigest] = useState<string | null>(null);
 
   const handleAddMessage = async () => {
     // Validate inputs
@@ -83,15 +85,22 @@ export default function GuestbookPage() {
       // Execute with Enoki sponsorship
       const digest = await sponsorAndExecute(tx, {
         network: "testnet",
-        allowedMoveCallTargets: [`${CONTRACTS.GUESTBOOK.PACKAGE_ID}::guestbook::add_message`],
+        allowedMoveCallTargets: [
+          `${CONTRACTS.GUESTBOOK.PACKAGE_ID}::guestbook::add_message`,
+        ],
       });
 
       console.log("Message added successfully! Digest:", digest);
 
+      // Store digest for explorer button
+      setLastDigest(digest);
+
       // Add message to local state
       const newMessage = {
         id: Date.now().toString(),
-        author: `${account?.address.slice(0, 6)}...${account?.address.slice(-4)}`,
+        author: `${account?.address.slice(0, 6)}...${account?.address.slice(
+          -4
+        )}`,
         content: message.trim(),
         timestamp: Date.now(),
       };
@@ -100,7 +109,9 @@ export default function GuestbookPage() {
       setMessage("");
 
       // Show success message
-      alert("Message added successfully to the guestbook!");
+      alert(
+        "Message added successfully to the guestbook! Check the explorer button below to view your transaction."
+      );
     } catch (error: any) {
       console.error("Add message error:", error);
       alert(error?.message || "Failed to add message");
@@ -108,8 +119,6 @@ export default function GuestbookPage() {
       setIsAdding(false);
     }
   };
-
-
 
   const formatTime = (timestamp: number) => {
     const now = Date.now();
@@ -199,6 +208,30 @@ export default function GuestbookPage() {
                       {isAdding ? "Adding..." : "Sign Guestbook (Gasless)"}
                     </button>
                   </div>
+
+                  {/* Explorer Button */}
+                  {lastDigest && (
+                    <div className="mt-4 p-4 bg-[#4DA2FF]/10 border border-[#4DA2FF] rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white font-medium">
+                            ✅ Message Added Successfully!
+                          </p>
+                          <p className="text-[#C0E6FF] text-sm">
+                            Message stored on blockchain with gasless
+                            sponsorship
+                          </p>
+                        </div>
+                        <ExplorerButton
+                          digest={lastDigest}
+                          network="testnet"
+                          className="ml-4"
+                        >
+                          View Message Transaction
+                        </ExplorerButton>
+                      </div>
+                    </div>
+                  )}
 
                   <p className="text-[#C0E6FF]/70 text-sm">
                     {!message.trim()
